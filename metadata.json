@@ -1,0 +1,6 @@
+{
+  "name": "GlowUp",
+  "description": "Take care of yourself. Feel good in yourself. A gentle personal wellness, movement, skincare, sleep, and confidence habit app.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

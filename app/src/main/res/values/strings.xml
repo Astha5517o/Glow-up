@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">GlowUp</string>
+    <string name="app_tagline">Take care of yourself. Feel good in yourself.</string>
+    <string name="core_philosophy">GlowUp isn\'t about becoming someone else. It\'s about taking better care of the person you already are.</string>
+    <string name="onboarding_welcome_title">Welcome to GlowUp</string>
+    <string name="onboarding_welcome_subtitle">A little care, every day.</string>
+    <string name="onboarding_focus_title">What do you want to focus on?</string>
+    <string name="onboarding_free_title">When are you usually free?</string>
+    <string name="onboarding_time_title">How much time do you want to spend?</string>
+    <string name="onboarding_final_title">Your routine should support your life — not take it over.</string>
+    <string name="create_my_routine">Create My Routine</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_move">Move</string>
+    <string name="nav_glow">Glow</string>
+    <string name="nav_progress">Progress</string>
+    <string name="nav_profile">Profile</string>
+    <string name="move_header">Move your way</string>
+    <string name="move_subtitle">Movement is about feeling capable — not changing your body.</string>
+    <string name="glow_header">Glow ✨</string>
+    <string name="glow_subtitle">Simple habits. Consistent care.</string>
+    <string name="progress_header">Your week</string>
+    <string name="empty_habits_message">Your day is still yours.\nStart with one small thing.</string>
+    <string name="empty_confidence_message">Give yourself one minute today.</string>
+    <string name="empty_movement_message">Whenever you\'re ready, there\'s a short routine waiting.</string>
+</resources>
