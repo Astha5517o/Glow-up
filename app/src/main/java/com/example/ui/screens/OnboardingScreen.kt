@@ -145,21 +145,21 @@ fun OnboardingScreen(
                         }
                         Spacer(modifier = Modifier.height(28.dp))
                         Text(
-                            text = "Welcome to GlowUp",
+                            text = "Welcome to ASTHA OS",
                             style = MaterialTheme.typography.displayMedium,
                             color = MaterialTheme.colorScheme.onBackground,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "A little care, every day.",
+                            text = "Know what matters. Do the next right thing.",
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Take care of yourself. Feel good in yourself.\nYou don't need to change your body to deserve confidence. These habits are here to help you feel stronger, healthier, fresher, and more confident.",
+                            text = "Your personal operating system for Class 11 PCM study, Krow & Smart EcoDrain Shield projects, scholarship & portfolio building, and calm daily wellness.\n\n\"I open the app and immediately know what matters, what I should do next, how to do it, and when I can stop.\"",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

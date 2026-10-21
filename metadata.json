@@ -1,6 +1,6 @@
 {
-  "name": "GlowUp",
-  "description": "Take care of yourself. Feel good in yourself. A gentle personal wellness, movement, skincare, sleep, and confidence habit app.",
+  "name": "ASTHA OS",
+  "description": "Know what matters. Do the next right thing. Personal productivity, PCM study engine, project & portfolio builder, and wellness operating system for Astha.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

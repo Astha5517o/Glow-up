@@ -19,10 +19,10 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = Color.White,
     secondaryContainer = SoftSageLight,
     onSecondaryContainer = SoftSageDark,
-    tertiary = SoftBlueHydrate,
+    tertiary = WarmPeachHighlight,
     onTertiary = Color.White,
-    tertiaryContainer = SoftBlueLight,
-    onTertiaryContainer = Color(0xFF234966),
+    tertiaryContainer = WarmPeachLight,
+    onTertiaryContainer = WarmPeachDark,
     background = WarmOffWhite,
     onBackground = DarkCharcoal,
     surface = PureWhiteCard,
@@ -35,25 +35,25 @@ private val LightColorScheme = lightColorScheme(
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimaryLavender,
-    onPrimary = Color(0xFF231B38),
+    onPrimary = Color(0xFF1F1A42),
     primaryContainer = DarkPrimaryContainer,
     onPrimaryContainer = SoftLavenderLight,
     secondary = DarkSecondarySage,
     onSecondary = Color(0xFF152B1D),
     secondaryContainer = DarkSecondaryContainer,
     onSecondaryContainer = SoftSageLight,
-    tertiary = Color(0xFF90BFE3),
-    onTertiary = Color(0xFF133047),
-    tertiaryContainer = Color(0xFF234866),
-    onTertiaryContainer = SoftBlueLight,
+    tertiary = Color(0xFFF0A981),
+    onTertiary = Color(0xFF47210B),
+    tertiaryContainer = Color(0xFF613115),
+    onTertiaryContainer = WarmPeachLight,
     background = DarkBackground,
     onBackground = DarkTextPrimary,
     surface = DarkCardSurface,
     onSurface = DarkTextPrimary,
     surfaceVariant = DarkElevatedSurface,
     onSurfaceVariant = DarkTextSecondary,
-    outline = Color(0xFF45414F),
-    outlineVariant = Color(0xFF33303B)
+    outline = Color(0xFF433F4D),
+    outlineVariant = Color(0xFF322F3B)
 )
 
 val GlowUpShapes = Shapes(
@@ -66,10 +66,16 @@ val GlowUpShapes = Shapes(
 
 @Composable
 fun GlowUpTheme(
+    themeMode: String = "LIGHT", // LIGHT, DARK, SYSTEM
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val useDark = when (themeMode.uppercase()) {
+        "DARK" -> true
+        "LIGHT" -> false
+        else -> darkTheme
+    }
+    val colorScheme = if (useDark) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,

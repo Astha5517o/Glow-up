@@ -8,13 +8,37 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [
         UserPreferencesEntity::class,
+        OsTaskEntity::class,
+        TimelineBlockEntity::class,
+        StudyChapterEntity::class,
+        ErrorLogEntity::class,
+        ProjectEntity::class,
+        ProfileAchievementEntity::class,
+        OpportunityEntity::class,
+        BrainDumpEntity::class,
+        DistractionLogEntity::class,
         DailyHabitEntity::class,
         SkincareStepEntity::class,
         HydrationReminderEntity::class,
         ConfidenceEntryEntity::class,
-        DailyProgressEntity::class
+        DailyProgressEntity::class,
+        CalendarEventEntity::class,
+        MonthlyGoalEntity::class,
+        LongTermGoalEntity::class,
+        RecentWinEntity::class,
+        SpecialDayPlanEntity::class,
+        EventPrepMilestoneEntity::class,
+        EndOfDayReflectionEntity::class,
+        SetbackRecoveryEntity::class,
+        FinancialExperimentEntity::class,
+        AcademicTopicEntity::class,
+        ScienceExhibitionScorecardEntity::class,
+        ScholarshipStrategyEntity::class,
+        ScenarioPlanEntity::class,
+        ProfileEvidenceLedgerEntity::class,
+        AngerOverwhelmPauseEntity::class
     ],
-    version = 1,
+    version = 7,
     exportSchema = false
 )
 abstract class GlowUpDatabase : RoomDatabase() {

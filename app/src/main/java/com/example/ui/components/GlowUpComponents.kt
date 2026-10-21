@@ -19,27 +19,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -162,12 +161,12 @@ fun SecondaryButton(
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outline),
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         modifier = modifier
-            .height(52.dp)
+            .height(50.dp)
             .minimumInteractiveComponentSize()
             .testTag(testTag)
     ) {
@@ -175,6 +174,28 @@ fun SecondaryButton(
             text = text,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+fun StatusBadgeChip(
+    label: String,
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = containerColor,
+        modifier = modifier
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = contentColor,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
         )
     }
 }
@@ -211,7 +232,7 @@ fun ProgressCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "TODAY",
+                        text = "WELLNESS & SELF-CARE",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -224,11 +245,7 @@ fun ProgressCard(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = if (completedCount == 0) {
-                            "Your day is still yours. Start with one small thing."
-                        } else {
-                            supportiveQuote
-                        },
+                        text = supportiveQuote,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -236,40 +253,28 @@ fun ProgressCard(
                 Spacer(modifier = Modifier.width(16.dp))
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(68.dp)
+                    modifier = Modifier.size(64.dp)
                 ) {
                     CircularProgressIndicator(
                         progress = { 1f },
-                        modifier = Modifier.size(68.dp),
+                        modifier = Modifier.size(64.dp),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                        strokeWidth = 7.dp
+                        strokeWidth = 6.dp
                     )
                     CircularProgressIndicator(
                         progress = { animatedProgress },
-                        modifier = Modifier.size(68.dp),
+                        modifier = Modifier.size(64.dp),
                         color = if (completedCount == totalCount && totalCount > 0) GentleSuccessGreen else MaterialTheme.colorScheme.primary,
-                        strokeWidth = 7.dp,
+                        strokeWidth = 6.dp,
                         strokeCap = StrokeCap.Round
                     )
                     Text(
-                        text = "${(rawProgress * 100).toInt()}%",
+                        text = "$completedCount/$totalCount",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (completedCount == totalCount && totalCount > 0) GentleSuccessGreen else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                strokeCap = StrokeCap.Round
-            )
 
             Spacer(modifier = Modifier.height(12.dp))
             Surface(
@@ -287,7 +292,7 @@ fun ProgressCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "✨ View your personalized daily routine flow",
+                        text = "✨ View your full daily routine blueprint",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -326,14 +331,6 @@ fun HabitCard(
             .testTag("habit_card_${habit.category.lowercase()}"),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor),
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (habit.completedToday) {
-                MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            }
-        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -416,8 +413,7 @@ fun RoutineCard(
             .testTag("routine_card_${routine.id}"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(
@@ -431,7 +427,7 @@ fun RoutineCard(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
                     ) {
                         Text(
-                            text = "${routine.durationMinutes} MIN",
+                            text = "${routine.category} • ${routine.durationMinutes} MIN",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -502,11 +498,7 @@ fun CheckListItem(
         } else {
             MaterialTheme.colorScheme.surface
         },
-        border = BorderStroke(
-            1.dp,
-            if (step.completedToday) MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
-            else MaterialTheme.colorScheme.outlineVariant
-        )
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
@@ -581,15 +573,15 @@ fun ReminderCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("hydration_reminder_${reminder.id}"),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (reminder.completedToday) {
-                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
             } else {
                 MaterialTheme.colorScheme.surface
             }
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
@@ -606,7 +598,7 @@ fun ReminderCard(
                 Icon(
                     imageVector = if (reminder.completedToday) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
                     contentDescription = "Mark ${reminder.timeLabel} water break completed",
-                    tint = if (reminder.completedToday) GentleSuccessGreen else MaterialTheme.colorScheme.tertiary
+                    tint = if (reminder.completedToday) GentleSuccessGreen else MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -623,7 +615,7 @@ fun ReminderCard(
                     text = when {
                         reminder.completedToday -> "💧 Completed today"
                         isPaused -> "Paused gently"
-                        reminder.isEnabled -> "💧 Hydration break reminder active"
+                        reminder.isEnabled -> "💧 Hydration break active"
                         else -> "Reminder off"
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -664,10 +656,10 @@ fun MoodSelector(
     modifier: Modifier = Modifier
 ) {
     val moods = listOf(
-        "😊" to "Really good",
-        "🙂" to "Good",
+        "😊" to "Strong & Clear",
+        "🙂" to "Steady",
         "😐" to "Okay",
-        "😔" to "Difficult"
+        "😔" to "Low Energy"
     )
 
     Row(
@@ -698,7 +690,7 @@ fun MoodSelector(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     )
@@ -718,14 +710,12 @@ fun WeeklyProgressCard(
 ) {
     val safeTarget = target.coerceAtLeast(1)
     val ratio = (completed.toFloat() / safeTarget.toFloat()).coerceIn(0f, 1f)
-    val filledBlocks = (ratio * 10).toInt().coerceIn(0, 10)
-    val asciiBar = "█".repeat(filledBlocks) + "░".repeat(10 - filledBlocks)
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        tonalElevation = 1.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -739,7 +729,7 @@ fun WeeklyProgressCard(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "$completed/$target",
+                    text = "$completed / $target",
                     style = MaterialTheme.typography.labelLarge,
                     color = accentColor,
                     fontWeight = FontWeight.Bold
@@ -756,12 +746,6 @@ fun WeeklyProgressCard(
                 trackColor = accentColor.copy(alpha = 0.16f),
                 strokeCap = StrokeCap.Round
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "$asciiBar  $completed/$target",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -775,15 +759,15 @@ fun NotificationCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .testTag("notification_card_${sample.category.lowercase()}"),
-        shape = RoundedCornerShape(16.dp),
+            .testTag("notification_card_${sample.category.lowercase().replace(" ", "_")}"),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -813,7 +797,7 @@ fun NotificationCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.NotificationsNone,
-                    contentDescription = "Send gentle notification",
+                    contentDescription = "Send notification",
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -836,21 +820,21 @@ fun SettingsRow(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
             .then(
                 if (onClick != null) Modifier.clickable { onClick() }
                 else if (onCheckedChange != null && checked != null) Modifier.clickable { onCheckedChange(!checked) }
                 else Modifier
             )
             .testTag(testTag),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -901,15 +885,15 @@ fun BottomNavigation(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .testTag("bottom_navigation_bar"),
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 4.dp
+        tonalElevation = 6.dp
     ) {
         BottomNavTab.entries.forEach { tab ->
             val selected = selectedTab == tab
             val icon = when (tab) {
-                BottomNavTab.HOME -> if (selected) Icons.Filled.Home else Icons.Outlined.Home
-                BottomNavTab.MOVE -> if (selected) Icons.Filled.FitnessCenter else Icons.Outlined.FitnessCenter
-                BottomNavTab.GLOW -> if (selected) Icons.Filled.AutoAwesome else Icons.Outlined.AutoAwesome
-                BottomNavTab.PROGRESS -> if (selected) Icons.Filled.Insights else Icons.Outlined.Insights
+                BottomNavTab.TODAY -> if (selected) Icons.Filled.Today else Icons.Outlined.Today
+                BottomNavTab.STUDY -> if (selected) Icons.Filled.MenuBook else Icons.Outlined.MenuBook
+                BottomNavTab.BUILD -> if (selected) Icons.Filled.Code else Icons.Outlined.Code
+                BottomNavTab.WELLNESS -> if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
                 BottomNavTab.PROFILE -> if (selected) Icons.Filled.Person else Icons.Outlined.Person
             }
             NavigationBarItem(
@@ -924,7 +908,7 @@ fun BottomNavigation(
                 label = {
                     Text(
                         text = tab.label,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                     )
                 },

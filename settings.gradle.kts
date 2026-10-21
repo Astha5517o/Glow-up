@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "GlowUp"
+rootProject.name = "ASTHA OS"
 
 include(":app")
