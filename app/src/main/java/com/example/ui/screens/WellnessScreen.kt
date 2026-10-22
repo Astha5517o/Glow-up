@@ -74,7 +74,7 @@ fun WellnessScreen(
     onOpenSubScreen: (ActiveSubScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val subSections = listOf("OVERVIEW", "MINDSET & CONFIDENCE", "FITNESS & MOBILITY", "SELF-CARE / GLOW", "SLEEP & BRAIN DUMP")
+    val subSections = listOf("OVERVIEW", "HOBBIES & JOY", "MINDSET & CONFIDENCE", "FITNESS & MOBILITY", "SELF-CARE / GLOW", "SLEEP & BRAIN DUMP")
     var selectedSubSection by rememberSaveable { mutableStateOf("OVERVIEW") }
     var addSkincarePeriod by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -142,6 +142,40 @@ fun WellnessScreen(
         }
 
         when (selectedSubSection) {
+            "HOBBIES & JOY" -> {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) }
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "🎨 HOBBIES, CREATIVITY & JOY",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = "Drawing, mechanical sketching, watching 1 planned episode of anime, taking an outdoor walk, and family dinners are not things to 'make up for'. They are vital for focus and emotional resilience.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            FilledTonalButton(
+                                onClick = { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Open Hobbies & Joy Manager →")
+                            }
+                        }
+                    }
+                }
+            }
+
             "MINDSET & CONFIDENCE" -> {
                 item {
                     Card(

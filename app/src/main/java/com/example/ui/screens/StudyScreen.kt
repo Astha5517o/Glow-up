@@ -83,6 +83,7 @@ fun StudyScreen(
     onAddChapter: (subject: String, chapterName: String, currentTopic: String, weakAreas: String) -> Unit,
     onOpenChemistryMission: () -> Unit = {},
     onOpenAcademicExcellence: () -> Unit = {},
+    onOpenMissionJeetTracker: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedSubjectFilter by rememberSaveable { mutableStateOf("All") }
@@ -194,6 +195,47 @@ fun StudyScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
                         )
+                    }
+                }
+            }
+        }
+
+        // MISSION JEET LECTURE CONTINUITY
+        item {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable { onOpenMissionJeetTracker() }
+                    .testTag("study_mission_jeet_card")
+            ) {
+                Row(
+                    modifier = Modifier.padding(18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "🎯 MISSION JEET LECTURE TRACKER",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Track batch lectures chunk by chunk: active notes, recall, questions attempted & mistake review.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    FilledTonalButton(
+                        onClick = onOpenMissionJeetTracker,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Track Chunks")
                     }
                 }
             }

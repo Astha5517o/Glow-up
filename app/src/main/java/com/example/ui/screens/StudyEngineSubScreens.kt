@@ -112,6 +112,10 @@ fun FocusModeSubScreen(
         }
     }
 
+    var showDistractionResetModal by rememberSaveable { mutableStateOf(false) }
+    var parkedThoughtInput by rememberSaveable { mutableStateOf("") }
+    var parkedThoughtsList by rememberSaveable { mutableStateOf(listOf<String>()) }
+
     val totalSeconds = (durationMinutes * 60).coerceAtLeast(1)
     val timerProgress = (secondsRemaining.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
 
@@ -245,10 +249,10 @@ fun FocusModeSubScreen(
 
         Spacer(modifier = Modifier.weight(0.6f))
 
-        // Action Controls: [PAUSE] [STUCK] [FINISH]
+        // Action Controls: [PAUSE] [DISTRACTED] [STUCK]
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 onClick = { isPaused = !isPaused },
@@ -262,19 +266,33 @@ fun FocusModeSubScreen(
                     imageVector = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
                     contentDescription = null
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(if (isPaused) "RESUME" else "PAUSE")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (isPaused) "RESUME" else "PAUSE", style = MaterialTheme.typography.labelMedium)
+            }
+
+            OutlinedButton(
+                onClick = {
+                    isPaused = true
+                    showDistractionResetModal = true
+                },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .weight(1.2f)
+                    .height(52.dp)
+                    .testTag("focus_distracted_button")
+            ) {
+                Text("💭 Distracted", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
 
             FilledTonalButton(
                 onClick = onOpenImStuck,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.9f)
                     .height(52.dp)
                     .testTag("focus_stuck_button")
             ) {
-                Text("🧩 STUCK", fontWeight = FontWeight.Bold)
+                Text("🧩 STUCK", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -296,6 +314,108 @@ fun FocusModeSubScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Text("FINISH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
+    }
+
+    // Gentle In-Focus Distraction Recovery & Thought Parking Dialog
+    if (showDistractionResetModal) {
+        AlertDialog(
+            onDismissRequest = {
+                showDistractionResetModal = false
+                isPaused = false
+            },
+            title = {
+                Text("🌿 Gentle Focus Reset", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Wandering focus is natural human biology, not a failure. No shame, and no streak lost.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Park Thought for Later (Clear Your Head):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedTextField(
+                                    value = parkedThoughtInput,
+                                    onValueChange = { parkedThoughtInput = it },
+                                    placeholder = { Text("Jot stray thought...", style = MaterialTheme.typography.bodySmall) },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                FilledTonalButton(
+                                    onClick = {
+                                        if (parkedThoughtInput.isNotBlank()) {
+                                            parkedThoughtsList = parkedThoughtsList + parkedThoughtInput.trim()
+                                            parkedThoughtInput = ""
+                                        }
+                                    }
+                                ) {
+                                    Text("Park")
+                                }
+                            }
+                            if (parkedThoughtsList.isNotEmpty()) {
+                                Text(
+                                    text = "Parked: ${parkedThoughtsList.joinToString(", ")}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = GentleSuccessGreen
+                                )
+                            }
+                        }
+                    }
+
+                    Text("Choose how to reset:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+
+                    OutlinedButton(
+                        onClick = {
+                            showDistractionResetModal = false
+                            isPaused = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("1. Take 3 deep breaths & resume timer")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            secondsRemaining = (15 * 60).coerceAtMost(secondsRemaining)
+                            showDistractionResetModal = false
+                            isPaused = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("2. Shorten this session to 15m")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showDistractionResetModal = false
+                            showCompletionCheckIn = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("3. Finish calmly and take a break")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDistractionResetModal = false
+                        isPaused = false
+                    }
+                ) {
+                    Text("Resume")
+                }
+            }
+        )
     }
 
     // Post-Focus Reflection ("How focused were you?" + private distraction pattern tracking)
@@ -1032,7 +1152,7 @@ fun PracticeQuestionsSubScreen(
                         )
                     }
                 }
-                listOf("All", "Drona", "Study Panda", "Mission Jeet", "School").forEach { src ->
+                listOf("All", "Mission Jeet", "School", "Study Panda", "Self-Study").forEach { src ->
                     val sel = selectedSource == src
                     Surface(
                         shape = RoundedCornerShape(10.dp),
@@ -1392,7 +1512,7 @@ fun ErrorLogSubScreen(
         var mistakeType by rememberSaveable { mutableStateOf(mistakeTypes.first()) }
         var whyText by rememberSaveable { mutableStateOf("") }
         var correctText by rememberSaveable { mutableStateOf("") }
-        var source by rememberSaveable { mutableStateOf("Drona") }
+        var source by rememberSaveable { mutableStateOf("Mission Jeet") }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },

@@ -351,9 +351,9 @@ object GlowUpNotificationHelper {
         ),
         GentleNotificationSample(
             2006,
-            "Drona Coaching",
-            "Drona Preparation",
-            "Time to review notes before Drona class."
+            "Mission Jeet Focus",
+            "Mission Jeet Preparation",
+            "Ready to continue your planned lecture chunk or practice questions."
         ),
         GentleNotificationSample(
             2007,

@@ -19,10 +19,17 @@ data class UserPreferencesEntity(
     val dailyTimeCommitmentMinutes: Int = 15,
     val currentEnergyLevel: String = "NORMAL", // LOW, NORMAL, HIGH
     val currentDayMode: String = "School day", // School day, Weekend, Exam preparation, Competition preparation
+    val morningStudyStartTime: String = "6:00 AM",
+    val morningStudyEndTime: String = "7:15 AM",
     val schoolStartTime: String = "7:15 AM",
     val schoolEndTime: String = "2:30 PM",
-    val dronaSchedule: String = "6:00 PM – 8:00 PM",
-    val wakeTime: String = "6:15 AM",
+    val afterSchoolResetStartTime: String = "2:30 PM",
+    val afterSchoolResetEndTime: String = "4:00 PM",
+    val eveningStudyStartTime: String = "4:00 PM",
+    val eveningStudyEndTime: String = "9:00 PM",
+    val eveningPlanMode: String = "STANDARD", // STANDARD, SHORT, LOW_ENERGY
+    val dronaSchedule: String = "", // Legacy field - No coaching attended; user uses self-paced Mission Jeet
+    val wakeTime: String = "6:00 AM",
     val targetBedtime: String = "10:15 PM",
     val windDownTime: String = "9:40 PM",
     val studyResetEnabled: Boolean = true,
@@ -47,8 +54,8 @@ data class UserPreferencesEntity(
     val ncscProjectTitle: String = "Smart EcoDrain Shield",
     val ncscChecklistCsv: String = "Project understanding,Problem statement,Innovation,Prototype",
     val nextWeekFocus: String = "Solve 5 medium Physics numericals before checking solutions",
-    val weeklyWorkedWell: String = "One-shot active recall before solving medium Physics & Maths sets.",
-    val weeklyDidNotWork: String = "Switching to YouTube when stuck on multi-step numericals.",
+    val weeklyWorkedWell: String = "Mission Jeet active recall and problem sets right after lessons.",
+    val weeklyDidNotWork: String = "Switching to random videos when stuck on numericals.",
     val weeklyShouldChange: String = "Use the 5-level I'm Stuck system and log formula mistakes immediately.",
     val lastRecommendedTaskId: Int = -1,
     val lastRecommendedSubject: String = "",
@@ -60,14 +67,53 @@ data class UserPreferencesEntity(
     val monthReviewWhatEvidence: String = "Krow GitHub repository, 3 user walkthrough observations, and EcoDrain flow-test logs.",
     val monthReviewContinue: String = "25–35m focused problem sets right after power reset.",
     val monthReviewStop: String = "Re-watching full one-shot lectures instead of practicing questions.",
-    val weeklyPlanMon: String = "STUDY DAY • School + Drona coaching",
+    val weeklyPlanMon: String = "STUDY DAY • School + Evening Mission Jeet & Revision",
     val weeklyPlanTue: String = "REVISION DAY • Formula recall + Krow project",
     val weeklyPlanWed: String = "RESEARCH / EXPLORATION DAY • AI/CS curiosity + EcoDrain",
-    val weeklyPlanThu: String = "STUDY DAY • School + Drona coaching",
+    val weeklyPlanThu: String = "STUDY DAY • School + Evening Mission Jeet Practice",
     val weeklyPlanFri: String = "COMPETITION PREPARATION DAY • NCSC & Krow validation",
     val weeklyPlanSat: String = "PROJECT DAY • Flexible build or personal experience",
-    val weeklyPlanSun: String = "FAMILY TIME DAY • Review, family evening & rest",
+    val weeklyPlanSun: String = "FAMILY TIME DAY • Review, hobbies & calm rest",
     val lastActiveDate: String = ""
+)
+
+@Entity(tableName = "mission_jeet_lectures")
+data class MissionJeetLectureEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val subject: String, // Physics, Chemistry Physical, Chemistry Organic/Inorganic, Mathematics, Computer Science / AI
+    val chapter: String,
+    val topic: String,
+    val lectureTitle: String,
+    val lectureUrlOrRef: String = "",
+    val totalDurationMinutes: Int = 90,
+    val lastWatchedPositionText: String = "00:00", // e.g. "42:15"
+    val watchedMinutes: Int = 0,
+    val sectionsCompletedCsv: String = "", // e.g. "Intro,Concept derivation,Worked Example"
+    val doubtsAndNotes: String = "",
+    val conceptConfidence: String = "MEDIUM", // LOW, MEDIUM, HIGH
+    val status: String = "NOT_STARTED", // NOT_STARTED, IN_PROGRESS, LESSON_COMPLETED, RECALL_PENDING, PRACTICE_PENDING, REVIEWED
+    val recallCompleted: Boolean = false,
+    val questionsAttemptedCount: Int = 0,
+    val questionsSolvedCount: Int = 0,
+    val mistakesIdentified: String = "",
+    val revisionStatus: String = "PENDING", // PENDING, DONE
+    val nextAction: String = "Watch first 25 minutes and take active notes",
+    val isPriority: Boolean = false,
+    val lastUpdatedTimestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "hobbies_and_joy")
+data class HobbyEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String, // "Drawing & Sketching", "Anime & Entertainment", "Evening Walk", "Family Time & Dinner"
+    val category: String = "CREATIVE", // CREATIVE, ENTERTAINMENT, PHYSICAL, SOCIAL
+    val preferredWindow: String = "Evening or After-school", // After-school, Evening, Night, Weekend
+    val suggestedDurationMinutes: Int = 30,
+    val description: String = "",
+    val isScheduledOnCalendar: Boolean = false,
+    val lastEnjoyedDate: String = "",
+    val notesOrCurrentFocus: String = "",
+    val guiltFreeReminder: String = "Rest, joy, and creative play protect your long-term focus and curiosity."
 )
 
 @Entity(tableName = "os_tasks")

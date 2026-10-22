@@ -40,7 +40,7 @@ object AsthaAiEngine {
         return buildString {
             appendLine("STUDENT: ${prefs.userName} (${prefs.studentClass}, ${prefs.schoolName})")
             appendLine("ENERGY: ${prefs.currentEnergyLevel} | MODE: ${prefs.currentDayMode}")
-            appendLine("SCHEDULE: School ${prefs.schoolStartTime}-${prefs.schoolEndTime}, Drona ${prefs.dronaSchedule}, Wind-down ${prefs.windDownTime}")
+            appendLine("SCHEDULE: Morning study ${prefs.morningStudyStartTime}-${prefs.morningStudyEndTime}, School ${prefs.schoolStartTime}-${prefs.schoolEndTime}, After-school reset ${prefs.afterSchoolResetStartTime}-${prefs.afterSchoolResetEndTime}, Evening study ${prefs.eveningStudyStartTime}-${prefs.eveningStudyEndTime} (Mode: ${prefs.eveningPlanMode}), Wind-down ${prefs.windDownTime}, Bedtime ${prefs.targetBedtime}. NOTE: User does not attend coaching; user uses self-paced Mission Jeet batch.")
             appendLine("TOP 3 UNFINISHED TASKS: ${unfinishedTop3.joinToString(" | ") { "${it.title} (${it.durationMinutes}m)" }}")
             appendLine("CHAPTERS: ${chapters.joinToString(" | ") { "${it.subject}: ${it.chapterName} [Status=${it.understandingStatus}, Weak=${it.weakAreas}]" }}")
             appendLine("UNRESOLVED MISTAKES (${unresolvedErrors.size}): ${unresolvedErrors.take(3).joinToString(" | ") { "${it.subject} (${it.mistakeType}): ${it.questionSummary}" }}")

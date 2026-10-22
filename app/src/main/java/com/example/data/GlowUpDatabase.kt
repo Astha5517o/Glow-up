@@ -36,9 +36,11 @@ import androidx.room.RoomDatabase
         ScholarshipStrategyEntity::class,
         ScenarioPlanEntity::class,
         ProfileEvidenceLedgerEntity::class,
-        AngerOverwhelmPauseEntity::class
+        AngerOverwhelmPauseEntity::class,
+        MissionJeetLectureEntity::class,
+        HobbyEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class GlowUpDatabase : RoomDatabase() {

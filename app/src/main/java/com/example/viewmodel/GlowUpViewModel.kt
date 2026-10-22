@@ -23,8 +23,10 @@ import com.example.data.FinancialExperimentEntity
 import com.example.data.FinancialLesson
 import com.example.data.GeneratedRoutineBlock
 import com.example.data.GlowUpRepository
+import com.example.data.HobbyEntity
 import com.example.data.HydrationReminderEntity
 import com.example.data.LongTermGoalEntity
+import com.example.data.MissionJeetLectureEntity
 import com.example.data.MonthlyGoalEntity
 import com.example.data.MorningDecisionPlan
 import com.example.data.MorningStudyPriority
@@ -109,6 +111,9 @@ sealed class ActiveSubScreen {
     data object ScenarioPlanningSheet : ActiveSubScreen()
     data object ProfileEvidenceSheet : ActiveSubScreen()
     data object AngerOverwhelmPauseSheet : ActiveSubScreen()
+    data object MissionJeetSheet : ActiveSubScreen()
+    data object HobbiesAndJoySheet : ActiveSubScreen()
+    data object DistractionRecoverySheet : ActiveSubScreen()
 }
 
 
@@ -223,6 +228,12 @@ class GlowUpViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val angerOverwhelmPauses: StateFlow<List<AngerOverwhelmPauseEntity>> = repository.angerOverwhelmPauses
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val missionJeetLectures: StateFlow<List<MissionJeetLectureEntity>> = repository.missionJeetLectures
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val hobbies: StateFlow<List<HobbyEntity>> = repository.hobbies
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _morningDecisionPlan = MutableStateFlow<MorningDecisionPlan?>(null)
@@ -1236,34 +1247,157 @@ class GlowUpViewModel(
 
     fun generateDailyRoutine(prefs: UserPreferencesEntity): List<GeneratedRoutineBlock> {
         val morningItems = listOf(
-            "Wake at ${prefs.wakeTime} • Water + 3-min posture reach",
-            "Morning self-care & neat grooming",
-            "Check Today's Top 3 before leaving for school (${prefs.schoolStartTime})"
+            "${prefs.morningStudyStartTime}–${prefs.morningStudyEndTime}: Morning Focus Block (75 min)",
+            "• Choose 1 specific objective (active recall, fresh numericals, or mistake review)",
+            "• 10-minute fallback available if waking late—never turn a missed morning into failure",
+            "• Drink water, light stretch, and leave for school at ${prefs.schoolStartTime}"
         )
         val schoolItems = listOf(
-            "School Mode: Use 5–20 min free periods for formula recall or 2–3 questions",
-            "Friend time & hydration breaks"
+            "${prefs.schoolStartTime}–${prefs.schoolEndTime}: School Hours",
+            "• Attend classes and labs; use short 5–15m free intervals for lightweight formula recall",
+            "• Socialize with friends and keep hydration steady; no coaching scheduled"
         )
-        val afternoonItems = listOf(
-            "${prefs.schoolEndTime}: After-School Reset (Eat + 10m decompression + 20m controlled power rest)",
-            "3:30 PM: #1 Academic Focus Block (45 min)",
-            "4:30 PM: Project/Portfolio Build Step (Krow / Smart EcoDrain Shield)",
-            "5:20 PM: ${prefs.dailyTimeCommitmentMinutes}-min Personalized Movement",
-            "Drona / Coaching: ${prefs.dronaSchedule}"
+        val resetItems = listOf(
+            "${prefs.afterSchoolResetStartTime}–${prefs.afterSchoolResetEndTime}: After-School Reset (No intense study immediately)",
+            "• Eat lunch & freshen up",
+            "• 20-min power rest or gentle nap with timer",
+            "• Deliberate anime episode or light movement without guilt"
         )
+        val eveningItems = when (prefs.eveningPlanMode) {
+            "SHORT" -> listOf(
+                "${prefs.eveningStudyStartTime}–${prefs.eveningStudyEndTime}: Short Focused Evening Plan (Core Essentials)",
+                "• 4:00–5:15 PM: Mission Jeet #1 Priority Lesson (active watching & notes)",
+                "• 5:15–5:30 PM: Posture & hydration pause",
+                "• 5:30–6:30 PM: 5–8 targeted questions & mistake log",
+                "• 6:30–7:15 PM: Science project (Krow / EcoDrain) or second subject",
+                "• 8:15–9:00 PM: Family dinner & relaxed conversation"
+            )
+            "LOW_ENERGY" -> listOf(
+                "${prefs.eveningStudyStartTime}–${prefs.eveningStudyEndTime}: Low-Energy Recovery Evening Plan (Gentle & Sustainable)",
+                "• 4:00–4:45 PM: Light concept review or one-shot summary (no heavy derivations)",
+                "• 4:45–5:30 PM: Walk outside or creative sketching/drawing",
+                "• 5:30–6:15 PM: Error Log review (read past mistakes without solving from scratch)",
+                "• 6:15–7:00 PM: Casual prototype reading or creative exploration",
+                "• 8:00–9:00 PM: Nourishing dinner, family time, and early wind-down"
+            )
+            else -> listOf(
+                "${prefs.eveningStudyStartTime}–${prefs.eveningStudyEndTime}: Standard Evening Plan (Balanced Academic & Project Progress)",
+                "• 4:00–5:15 PM: Mission Jeet Lecture & Core Concepts (active chunking)",
+                "• 5:15–5:35 PM: Movement, water & desk reset",
+                "• 5:35–6:45 PM: Independent question practice & mistake logging",
+                "• 6:45–7:35 PM: Project / Build focus (Krow / Smart EcoDrain Shield)",
+                "• 7:35–8:15 PM: School subjects revision (Chemistry NCERT / CS)",
+                "• 8:15–9:00 PM: Dinner, family connection & relaxed transition"
+            )
+        }
         val nightItems = listOf(
-            "8:30 PM: Dinner & Entertainment Wallet (${prefs.entertainmentTitle})",
-            "9:15 PM: Light Error Log revision + prepare tomorrow's bag",
-            "${prefs.windDownTime}: Night Brain Dump ('Empty Your Head') + Evening self-care",
-            "${prefs.targetBedtime}: Sleep"
+            "9:00–9:40 PM: Hobbies & Joy (Drawing, anime, or personal reading)",
+            "${prefs.windDownTime}: 2-Minute Guilt-Free Closure & Tomorrow's First Step",
+            "${prefs.targetBedtime}: Sleep for full recovery"
         )
 
         return listOf(
-            GeneratedRoutineBlock("Morning", "☀️", morningItems),
-            GeneratedRoutineBlock("At School", "🏫", schoolItems),
-            GeneratedRoutineBlock("Afternoon & Coaching", "🎯", afternoonItems),
-            GeneratedRoutineBlock("Night & Wind-Down", "🌙", nightItems)
+            GeneratedRoutineBlock("Morning Study (6:00–7:15 AM)", "🌅", morningItems),
+            GeneratedRoutineBlock("School (7:15 AM–2:30 PM)", "🏫", schoolItems),
+            GeneratedRoutineBlock("After-School Reset (2:30–4:00 PM)", "🍃", resetItems),
+            GeneratedRoutineBlock("Evening Study & Goals (4:00–9:00 PM)", "📚", eveningItems),
+            GeneratedRoutineBlock("Night & Closure (9:00–10:15 PM)", "🌙", nightItems)
         )
+    }
+
+    fun setEveningPlanMode(mode: String) {
+        viewModelScope.launch {
+            val current = preferences.value
+            repository.saveUserPreferences(current.copy(eveningPlanMode = mode))
+            _statusBannerMessage.value = "Evening plan updated to: $mode Plan"
+        }
+    }
+
+    fun recalculateEvening(mode: String, availableMinutes: Int) {
+        viewModelScope.launch {
+            val current = preferences.value
+            repository.saveUserPreferences(current.copy(eveningPlanMode = mode))
+            // Adjust timeline blocks for today if needed
+            val blocks = repository.dao.getTimelineBlocksOnce()
+            if (blocks.isNotEmpty()) {
+                val updated = blocks.map { b ->
+                    if (b.title.contains("Evening", ignoreCase = true) || b.blockType == "FOCUS") {
+                        b.copy(subtitle = "Adjusted for $mode plan ($availableMinutes min available)")
+                    } else b
+                }
+                repository.dao.insertTimelineBlocks(updated)
+            }
+            _statusBannerMessage.value = "Recalculated evening calmly: $mode Plan ($availableMinutes min available)"
+        }
+    }
+
+    // Mission Jeet Management
+    fun saveMissionJeetLecture(lecture: MissionJeetLectureEntity) {
+        viewModelScope.launch {
+            repository.saveMissionJeetLecture(lecture)
+            _statusBannerMessage.value = "Saved Mission Jeet topic: ${lecture.topic}"
+        }
+    }
+
+    fun updateMissionJeetLecture(lecture: MissionJeetLectureEntity) {
+        viewModelScope.launch {
+            repository.updateMissionJeetLecture(lecture.copy(lastUpdatedTimestamp = System.currentTimeMillis()))
+            _statusBannerMessage.value = "Updated progress for: ${lecture.topic}"
+        }
+    }
+
+    fun deleteMissionJeetLecture(id: Int) {
+        viewModelScope.launch {
+            repository.deleteMissionJeetLecture(id)
+            _statusBannerMessage.value = "Removed Mission Jeet lecture."
+        }
+    }
+
+    // Hobbies & Joy Management
+    fun saveHobby(hobby: HobbyEntity) {
+        viewModelScope.launch {
+            repository.saveHobby(hobby)
+            _statusBannerMessage.value = "Added hobby: ${hobby.name}"
+        }
+    }
+
+    fun updateHobby(hobby: HobbyEntity) {
+        viewModelScope.launch {
+            repository.updateHobby(hobby)
+        }
+    }
+
+    fun deleteHobby(id: Int) {
+        viewModelScope.launch {
+            repository.deleteHobby(id)
+            _statusBannerMessage.value = "Removed hobby."
+        }
+    }
+
+    fun scheduleHobbyOnCalendar(hobby: HobbyEntity) {
+        viewModelScope.launch {
+            val todayStr = repository.todayDateString()
+            val event = CalendarEventEntity(
+                title = hobby.name,
+                dateString = todayStr,
+                endDateString = todayStr,
+                startTime = "9:00 PM",
+                endTime = "9:35 PM",
+                category = when (hobby.category) {
+                    "SOCIAL" -> "FAMILY TIME"
+                    "PHYSICAL" -> "WELLNESS"
+                    else -> "PERSONAL"
+                },
+                priority = "MEDIUM",
+                location = "Relaxation Space",
+                locationOrNotes = "${hobby.description} • Guilt-free recharge.",
+                reminderPreference = "On event day",
+                attendanceOrCompletionStatus = "PLANNED"
+            )
+            repository.dao.insertCalendarEvent(event)
+            repository.updateHobby(hobby.copy(isScheduledOnCalendar = true, lastEnjoyedDate = "Today"))
+            _statusBannerMessage.value = "Scheduled \"${hobby.name}\" on your calendar for tonight at 9:00 PM ✨"
+        }
     }
 
     // Existing Wellness methods preserved seamlessly

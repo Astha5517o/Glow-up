@@ -531,7 +531,7 @@ fun AcademicExcellenceSubScreen(
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "85% of concepts in CBSE Class 11 PCM form the common denominator for JEE Main, MEXT Written Exam (Math A/B & Chemistry), and SAT Math. Master school NCERT & coaching modules deeply first. Simultaneous exam-specific cramming is avoided.",
+                        text = "85% of concepts in CBSE Class 11 PCM form the common denominator for JEE Main, MEXT Written Exam (Math A/B & Chemistry), and SAT Math. Master school NCERT & Mission Jeet modules deeply first. Simultaneous exam-specific cramming is avoided.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1731,7 +1731,7 @@ fun AddAcademicTopicDialog(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = teacherGuidance, onCheckedChange = { teacherGuidance = it })
-                    Text("Requires Teacher / Coaching Guidance", style = MaterialTheme.typography.bodySmall)
+                    Text("Requires Teacher / Doubt Clearing Guidance", style = MaterialTheme.typography.bodySmall)
                 }
             }
         },

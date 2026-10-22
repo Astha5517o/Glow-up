@@ -1525,9 +1525,15 @@ fun SettingsSubScreen(
 ) {
     BackHandler { onClose() }
 
+    var morningStart by rememberSaveable { mutableStateOf(preferences.morningStudyStartTime) }
+    var morningEnd by rememberSaveable { mutableStateOf(preferences.morningStudyEndTime) }
     var schoolStart by rememberSaveable { mutableStateOf(preferences.schoolStartTime) }
     var schoolEnd by rememberSaveable { mutableStateOf(preferences.schoolEndTime) }
-    var dronaSched by rememberSaveable { mutableStateOf(preferences.dronaSchedule) }
+    var resetStart by rememberSaveable { mutableStateOf(preferences.afterSchoolResetStartTime) }
+    var resetEnd by rememberSaveable { mutableStateOf(preferences.afterSchoolResetEndTime) }
+    var eveningStart by rememberSaveable { mutableStateOf(preferences.eveningStudyStartTime) }
+    var eveningEnd by rememberSaveable { mutableStateOf(preferences.eveningStudyEndTime) }
+    var eveningPlanMode by rememberSaveable { mutableStateOf(preferences.eveningPlanMode) }
     var wakeTime by rememberSaveable { mutableStateOf(preferences.wakeTime) }
     var windDown by rememberSaveable { mutableStateOf(preferences.windDownTime) }
     var bedtime by rememberSaveable { mutableStateOf(preferences.targetBedtime) }
@@ -1591,7 +1597,7 @@ fun SettingsSubScreen(
             }
         }
 
-        // School, Drona & Sleep Schedule Settings
+        // Real Daily Routine & Sleep Schedule Settings
         item {
             Card(
                 shape = RoundedCornerShape(20.dp),
@@ -1599,53 +1605,143 @@ fun SettingsSubScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("SCHOOL, DRONA & SLEEP SCHEDULE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = schoolStart,
-                        onValueChange = { schoolStart = it },
-                        label = { Text("School Start Time") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                    Text("REAL DAILY ROUTINE & SCHEDULE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Configure your real study & rest windows. The engine adapts flexibly without rigid or coaching timetable constraints.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    OutlinedTextField(
-                        value = schoolEnd,
-                        onValueChange = { schoolEnd = it },
-                        label = { Text("School End Time") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = dronaSched,
-                        onValueChange = { dronaSched = it },
-                        label = { Text("Drona / Coaching Schedule") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = wakeTime,
-                        onValueChange = { wakeTime = it },
-                        label = { Text("Wake Time") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = windDown,
-                        onValueChange = { windDown = it },
-                        label = { Text("Wind-Down Time") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = bedtime,
-                        onValueChange = { bedtime = it },
-                        label = { Text("Target Bedtime") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+
+                    // Morning study window
+                    Text("🌅 Morning Study Window", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = morningStart,
+                            onValueChange = { morningStart = it },
+                            label = { Text("Start") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = morningEnd,
+                            onValueChange = { morningEnd = it },
+                            label = { Text("End") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // School hours
+                    Text("🏫 School Hours", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = schoolStart,
+                            onValueChange = { schoolStart = it },
+                            label = { Text("Start") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = schoolEnd,
+                            onValueChange = { schoolEnd = it },
+                            label = { Text("End") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // After-school reset
+                    Text("🍃 After-School Reset Window", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = resetStart,
+                            onValueChange = { resetStart = it },
+                            label = { Text("Start") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = resetEnd,
+                            onValueChange = { resetEnd = it },
+                            label = { Text("End") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Evening study window
+                    Text("📚 Evening Study Window", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = eveningStart,
+                            onValueChange = { eveningStart = it },
+                            label = { Text("Start") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = eveningEnd,
+                            onValueChange = { eveningEnd = it },
+                            label = { Text("End") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Evening Plan Mode selector
+                    Text("Evening Plan Preset", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("STANDARD" to "Standard", "SHORT" to "Short", "LOW_ENERGY" to "Low Energy").forEach { (modeVal, label) ->
+                            val isSel = eveningPlanMode == modeVal
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { eveningPlanMode = modeVal }
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    // Sleep & Wind-Down
+                    Text("🌙 Sleep & Recovery Routine", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = wakeTime,
+                            onValueChange = { wakeTime = it },
+                            label = { Text("Wake") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = windDown,
+                            onValueChange = { windDown = it },
+                            label = { Text("Wind-Down") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = bedtime,
+                            onValueChange = { bedtime = it },
+                            label = { Text("Bedtime") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
                     OutlinedTextField(
                         value = entTitle,
                         onValueChange = { entTitle = it },
-                        label = { Text("Entertainment Wallet Preference (e.g., Anime)") },
+                        label = { Text("Entertainment / Hobby Preference (e.g. Anime, Drawing)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1655,9 +1751,16 @@ fun SettingsSubScreen(
                         onClick = {
                             onUpdatePreferences {
                                 it.copy(
+                                    morningStudyStartTime = morningStart,
+                                    morningStudyEndTime = morningEnd,
                                     schoolStartTime = schoolStart,
                                     schoolEndTime = schoolEnd,
-                                    dronaSchedule = dronaSched,
+                                    afterSchoolResetStartTime = resetStart,
+                                    afterSchoolResetEndTime = resetEnd,
+                                    eveningStudyStartTime = eveningStart,
+                                    eveningStudyEndTime = eveningEnd,
+                                    eveningPlanMode = eveningPlanMode,
+                                    dronaSchedule = "",
                                     wakeTime = wakeTime,
                                     windDownTime = windDown,
                                     targetBedtime = bedtime,
@@ -1676,7 +1779,7 @@ fun SettingsSubScreen(
         item {
             SettingsRow(
                 title = "Sparse Smart Notifications",
-                subtitle = "Supportive reminders for after-school reset, Drona & wind-down",
+                subtitle = "Supportive reminders for morning study, after-school reset & wind-down",
                 checked = preferences.notificationsEnabled,
                 onCheckedChange = { enabled ->
                     onUpdatePreferences { it.copy(notificationsEnabled = enabled) }

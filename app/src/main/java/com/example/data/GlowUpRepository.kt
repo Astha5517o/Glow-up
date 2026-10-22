@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class GlowUpRepository(private val dao: GlowUpDao) {
+class GlowUpRepository(val dao: GlowUpDao) {
 
     val userPreferences: Flow<UserPreferencesEntity?> = dao.getUserPreferences()
     val allTasks: Flow<List<OsTaskEntity>> = dao.getAllTasks()
@@ -32,6 +32,8 @@ class GlowUpRepository(private val dao: GlowUpDao) {
     val scenarioPlans: Flow<List<ScenarioPlanEntity>> = dao.getScenarioPlans()
     val profileEvidenceLedger: Flow<List<ProfileEvidenceLedgerEntity>> = dao.getProfileEvidenceLedger()
     val angerOverwhelmPauses: Flow<List<AngerOverwhelmPauseEntity>> = dao.getAngerOverwhelmPauses()
+    val missionJeetLectures: Flow<List<MissionJeetLectureEntity>> = dao.getMissionJeetLectures()
+    val hobbies: Flow<List<HobbyEntity>> = dao.getHobbies()
 
     val activeHabits: Flow<List<DailyHabitEntity>> = dao.getActiveHabits()
     val skincareSteps: Flow<List<SkincareStepEntity>> = dao.getSkincareSteps()
@@ -153,6 +155,14 @@ class GlowUpRepository(private val dao: GlowUpDao) {
             dao.insertAngerOverwhelmPauses(DefaultWellnessData.defaultAngerOverwhelmPauses(today))
         }
 
+        if (dao.getMissionJeetLecturesOnce().isEmpty()) {
+            dao.insertMissionJeetLectures(DefaultWellnessData.defaultMissionJeetLectures())
+        }
+
+        if (dao.getHobbiesOnce().isEmpty()) {
+            dao.insertHobbies(DefaultWellnessData.defaultHobbies())
+        }
+
 
         val history = dao.getAllProgressHistoryOnce()
         if (history.isEmpty()) {
@@ -209,6 +219,10 @@ class GlowUpRepository(private val dao: GlowUpDao) {
     }
 
     suspend fun savePreferences(prefs: UserPreferencesEntity) {
+        dao.saveUserPreferences(prefs)
+    }
+
+    suspend fun saveUserPreferences(prefs: UserPreferencesEntity) {
         dao.saveUserPreferences(prefs)
     }
 
@@ -932,7 +946,7 @@ class GlowUpRepository(private val dao: GlowUpDao) {
             appendLine("Know what matters. Do the next right thing.")
             appendLine("Student: ${prefs.userName} (${prefs.studentClass} • ${prefs.schoolName})")
             appendLine("Subjects: ${prefs.subjectsCsv}")
-            appendLine("Energy: ${prefs.currentEnergyLevel} | Schedule: School ${prefs.schoolStartTime}-${prefs.schoolEndTime}, Drona ${prefs.dronaSchedule}")
+            appendLine("Energy: ${prefs.currentEnergyLevel} | Schedule: Morning Study ${prefs.morningStudyStartTime}-${prefs.morningStudyEndTime}, School ${prefs.schoolStartTime}-${prefs.schoolEndTime}, After-school Reset ${prefs.afterSchoolResetStartTime}-${prefs.afterSchoolResetEndTime}, Evening Study ${prefs.eveningStudyStartTime}-${prefs.eveningStudyEndTime} (Self-paced Mission Jeet, no coaching)")
             appendLine()
             appendLine("--- Today's Tasks (${tasks.size}) ---")
             tasks.forEach { t ->
@@ -1604,13 +1618,13 @@ class GlowUpRepository(private val dao: GlowUpDao) {
             exactTopic = "${primaryTopic.chapterName}: ${primaryTopic.topicName}",
             startingResourceOrMethod = when {
                 primaryTopic.isChemistryFullMarksFocus -> "NCERT Theory & Section Notes: Read core laws and written definitions first (no video)."
-                primaryTopic.practiceLevel == "NOT_STARTED" -> "Standard textbook / coaching module summary note (10 min read)."
+                primaryTopic.practiceLevel == "NOT_STARTED" -> "Standard textbook / Mission Jeet summary note (10 min read)."
                 else -> "Formula flashcards + 1 worked example problem."
             },
             activeRecallStep = "Close notes. Write key formulas, sign conventions, and assumptions on blank paper from memory.",
             questionsToAttempt = when (primaryTopic.practiceLevel) {
                 "NOT_STARTED", "LESSON_WATCHED" -> "Solve 3 fundamental School-Level NCERT in-text questions."
-                "SCHOOL_LEVEL" -> "Solve 4 standard coaching / NCERT Exemplar questions."
+                "SCHOOL_LEVEL" -> "Solve 4 standard Mission Jeet / NCERT Exemplar questions."
                 else -> "Solve 3 multi-step exam-level timed problems."
             },
             completionCriterion = "All 3-4 problems solved independently with complete steps, correct units, and diagrams without peeking at answers.",
@@ -1685,6 +1699,30 @@ class GlowUpRepository(private val dao: GlowUpDao) {
             energyLevel = energy,
             generatedDateString = todayStr
         )
+    }
+
+    suspend fun saveMissionJeetLecture(lecture: MissionJeetLectureEntity) {
+        dao.insertMissionJeetLecture(lecture)
+    }
+
+    suspend fun updateMissionJeetLecture(lecture: MissionJeetLectureEntity) {
+        dao.updateMissionJeetLecture(lecture)
+    }
+
+    suspend fun deleteMissionJeetLecture(id: Int) {
+        dao.deleteMissionJeetLecture(id)
+    }
+
+    suspend fun saveHobby(hobby: HobbyEntity) {
+        dao.insertHobby(hobby)
+    }
+
+    suspend fun updateHobby(hobby: HobbyEntity) {
+        dao.updateHobby(hobby)
+    }
+
+    suspend fun deleteHobby(id: Int) {
+        dao.deleteHobby(id)
     }
 }
 

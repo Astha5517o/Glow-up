@@ -123,6 +123,7 @@ fun HomeScreen(
     var showWhyExpanded by rememberSaveable { mutableStateOf(false) }
     var showOtherOptionsExpanded by rememberSaveable { mutableStateOf(false) }
     var showFullTimeline by rememberSaveable { mutableStateOf(false) }
+    var showImDistractedDialog by rememberSaveable { mutableStateOf(false) }
     var taskToReschedule by rememberSaveable { mutableStateOf<Int?>(null) }
 
     val topThreeTasks = tasks.filter { it.isTopThree }.sortedBy { it.topThreeSlot }
@@ -455,7 +456,7 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    // Obvious Primary Action: [ START ] + [ OTHER OPTIONS ]
+                    // Obvious Primary Action: [ Start Next Task ] + [ Change Plan ]
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -469,7 +470,7 @@ fun HomeScreen(
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             modifier = Modifier
-                                .weight(1.6f)
+                                .weight(1.5f)
                                 .height(56.dp)
                                 .minimumInteractiveComponentSize()
                                 .testTag("start_now_recommendation_button")
@@ -477,7 +478,7 @@ fun HomeScreen(
                             Icon(Icons.Filled.PlayArrow, contentDescription = null)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "START",
+                                text = "Start Next Task",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -485,27 +486,51 @@ fun HomeScreen(
 
                         OutlinedButton(
                             onClick = {
-                                showOtherOptionsExpanded = true
-                                onSkipNowRecommendation(nowRecommendation)
+                                showOtherOptionsExpanded = !showOtherOptionsExpanded
+                                if (!showOtherOptionsExpanded) {
+                                    onSkipNowRecommendation(nowRecommendation)
+                                }
                             },
                             shape = RoundedCornerShape(18.dp),
                             modifier = Modifier
-                                .weight(1.2f)
+                                .weight(1.1f)
                                 .height(56.dp)
                                 .testTag("skip_recommendation_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Refresh,
-                                contentDescription = "Other options",
+                                contentDescription = "Change Plan",
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "OTHER OPTIONS",
+                                text = "Change Plan",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Prominent Gentle Distraction Recovery Button
+                    OutlinedButton(
+                        onClick = { showImDistractedDialog = true },
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("today_im_distracted_button"),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Text(
+                            text = "💭 I'm Distracted (Gentle Recovery & Park Thoughts)",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -1012,6 +1037,26 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 QuickActionPill(
+                    label = "🎯 Mission Jeet",
+                    onClick = { onOpenSubScreen(ActiveSubScreen.MissionJeetSheet) },
+                    testTag = "quick_action_mission_jeet"
+                )
+                QuickActionPill(
+                    label = "🎨 Hobbies & Joy",
+                    onClick = { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) },
+                    testTag = "quick_action_hobbies"
+                )
+                QuickActionPill(
+                    label = "🍃 After-School Reset",
+                    onClick = { onOpenSubScreen(ActiveSubScreen.AfterSchoolResetSheet) },
+                    testTag = "quick_action_reset"
+                )
+                QuickActionPill(
+                    label = "🌅 Morning Study (6-7:15)",
+                    onClick = { onOpenSubScreen(ActiveSubScreen.MorningModeSheet) },
+                    testTag = "quick_action_morning_study"
+                )
+                QuickActionPill(
                     label = "+ Task",
                     onClick = { showAddTaskDialog = true },
                     testTag = "quick_action_add_task"
@@ -1361,6 +1406,149 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showImConfusedDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Non-Judgemental Distraction Recovery Dialog
+    if (showImDistractedDialog) {
+        var parkedThought by rememberSaveable { mutableStateOf("") }
+        var thoughtSavedFeedback by rememberSaveable { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showImDistractedDialog = false },
+            title = {
+                Text(
+                    text = "🌿 Gentle Focus Reset",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "It is completely normal for focus to wander or to feel tired. No guilt, no penalty, and no streak lost.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "Park a Distracting Thought:",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            OutlinedTextField(
+                                value = parkedThought,
+                                onValueChange = { parkedThought = it },
+                                placeholder = { Text("Jot down what's on your mind...", style = MaterialTheme.typography.bodySmall) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            if (parkedThought.isNotBlank()) {
+                                FilledTonalButton(
+                                    onClick = {
+                                        onAddTask(
+                                            parkedThought.trim(),
+                                            "Parked thought from focus session",
+                                            "Saved in backlog to review later without interrupting study.",
+                                            "PERSONAL",
+                                            "CAN POSTPONE",
+                                            15,
+                                            preferences.currentEnergyLevel,
+                                            "Evening",
+                                            false,
+                                            0
+                                        )
+                                        thoughtSavedFeedback = "Saved safely in your backlog! ✨"
+                                        parkedThought = ""
+                                    },
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text("Park It")
+                                }
+                            }
+                            if (thoughtSavedFeedback.isNotBlank()) {
+                                Text(
+                                    text = thoughtSavedFeedback,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = GentleSuccessGreen,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Choose your gentle next step:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            showImDistractedDialog = false
+                            onStartNowRecommendation(nowRecommendation)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("1. Take 3 deep breaths & resume calmly")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showImDistractedDialog = false
+                            val targetTask = tasks.firstOrNull { !it.isCompleted } ?: OsTaskEntity(
+                                title = "10-Minute Focus Reset",
+                                subtitle = "Review 1 key formula or solve 1 problem",
+                                whyItMatters = "Light restart without pressure.",
+                                domain = "ACADEMIC",
+                                durationMinutes = 10
+                            )
+                            onStartTaskFocus(targetTask.copy(durationMinutes = 10))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("2. Start a 10-minute micro version")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showImDistractedDialog = false
+                            onOpenSubScreen(ActiveSubScreen.AfterSchoolResetSheet)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("3. After-school reset / short walk")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showImDistractedDialog = false
+                            onOpenSubScreen(ActiveSubScreen.MorningModeSheet)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("4. Re-calculate study plan with ASTHA OS")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showImDistractedDialog = false }) {
                     Text("Close")
                 }
             }

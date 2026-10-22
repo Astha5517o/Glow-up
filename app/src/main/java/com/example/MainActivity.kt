@@ -148,6 +148,8 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
     val scenarioPlans by viewModel.scenarioPlans.collectAsStateWithLifecycle()
     val profileEvidenceLedger by viewModel.profileEvidenceLedger.collectAsStateWithLifecycle()
     val angerOverwhelmPauses by viewModel.angerOverwhelmPauses.collectAsStateWithLifecycle()
+    val missionJeetLectures by viewModel.missionJeetLectures.collectAsStateWithLifecycle()
+    val hobbies by viewModel.hobbies.collectAsStateWithLifecycle()
     val morningDecisionPlan by viewModel.morningDecisionPlan.collectAsStateWithLifecycle()
 
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -740,6 +742,62 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                             )
                         }
 
+                        is ActiveSubScreen.MissionJeetSheet -> {
+                            MissionJeetSubScreen(
+                                lectures = missionJeetLectures,
+                                onClose = { viewModel.closeSubScreen() },
+                                onSaveLecture = { viewModel.saveMissionJeetLecture(it) },
+                                onUpdateLecture = { viewModel.updateMissionJeetLecture(it) },
+                                onStartFocusSession = { task ->
+                                    viewModel.openSubScreen(
+                                        ActiveSubScreen.FocusMode(
+                                            taskTitle = task.title,
+                                            purpose = task.subtitle,
+                                            durationMinutes = task.durationMinutes,
+                                            currentStepText = "Active lecture notes & worked examples",
+                                            totalSteps = 5,
+                                            linkedTask = task
+                                        )
+                                    )
+                                }
+                            )
+                        }
+
+                        is ActiveSubScreen.HobbiesAndJoySheet -> {
+                            HobbiesAndJoySubScreen(
+                                hobbies = hobbies,
+                                onClose = { viewModel.closeSubScreen() },
+                                onSaveHobby = { viewModel.saveHobby(it) },
+                                onUpdateHobby = { viewModel.updateHobby(it) },
+                                onScheduleHobbyOnCalendar = { viewModel.scheduleHobbyOnCalendar(it) }
+                            )
+                        }
+
+                        is ActiveSubScreen.DistractionRecoverySheet -> {
+                            MorningModeSubScreen(
+                                academicTopics = academicTopics,
+                                calendarEvents = calendarEvents,
+                                generatedPlan = morningDecisionPlan,
+                                availableMinutes = 45,
+                                currentEnergy = preferences.currentEnergyLevel,
+                                onClose = { viewModel.closeSubScreen() },
+                                onGenerateMorningPlan = { mins, energy ->
+                                    viewModel.generateMorningDecisionPlan(mins, energy)
+                                },
+                                onStartPriorityFocus = { prio ->
+                                    viewModel.openSubScreen(
+                                        ActiveSubScreen.FocusMode(
+                                            taskTitle = "${prio.subject}: ${prio.exactTopic}",
+                                            purpose = prio.startingResourceOrMethod,
+                                            durationMinutes = prio.estimatedMinutes,
+                                            currentStepText = prio.activeRecallStep,
+                                            totalSteps = 5
+                                        )
+                                    )
+                                }
+                            )
+                        }
+
                         ActiveSubScreen.None -> {
                             when (selectedTab) {
                                 BottomNavTab.TODAY -> {
@@ -815,6 +873,9 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         },
                                         onOpenAcademicExcellence = {
                                             viewModel.openSubScreen(ActiveSubScreen.AcademicExcellenceSheet)
+                                        },
+                                        onOpenMissionJeetTracker = {
+                                            viewModel.openSubScreen(ActiveSubScreen.MissionJeetSheet)
                                         }
                                     )
                                 }

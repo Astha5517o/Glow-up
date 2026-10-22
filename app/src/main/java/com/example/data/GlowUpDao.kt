@@ -618,6 +618,50 @@ interface GlowUpDao {
 
     @Query("DELETE FROM anger_overwhelm_pauses")
     suspend fun clearAngerOverwhelmPauses()
+
+    // 7. Mission Jeet Lectures
+    @Query("SELECT * FROM mission_jeet_lectures ORDER BY isPriority DESC, lastUpdatedTimestamp DESC")
+    fun getMissionJeetLectures(): Flow<List<MissionJeetLectureEntity>>
+
+    @Query("SELECT * FROM mission_jeet_lectures ORDER BY isPriority DESC, lastUpdatedTimestamp DESC")
+    suspend fun getMissionJeetLecturesOnce(): List<MissionJeetLectureEntity>
+
+    @Query("SELECT * FROM mission_jeet_lectures WHERE id = :id")
+    suspend fun getMissionJeetLectureById(id: Int): MissionJeetLectureEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMissionJeetLecture(lecture: MissionJeetLectureEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMissionJeetLectures(lectures: List<MissionJeetLectureEntity>)
+
+    @Update
+    suspend fun updateMissionJeetLecture(lecture: MissionJeetLectureEntity)
+
+    @Query("DELETE FROM mission_jeet_lectures WHERE id = :id")
+    suspend fun deleteMissionJeetLecture(id: Int)
+
+    @Query("DELETE FROM mission_jeet_lectures")
+    suspend fun clearMissionJeetLectures()
+
+    // 8. Hobbies & Joy
+    @Query("SELECT * FROM hobbies_and_joy ORDER BY id ASC")
+    fun getHobbies(): Flow<List<HobbyEntity>>
+
+    @Query("SELECT * FROM hobbies_and_joy ORDER BY id ASC")
+    suspend fun getHobbiesOnce(): List<HobbyEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHobby(hobby: HobbyEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHobbies(hobbies: List<HobbyEntity>)
+
+    @Update
+    suspend fun updateHobby(hobby: HobbyEntity)
+
+    @Query("DELETE FROM hobbies_and_joy WHERE id = :id")
+    suspend fun deleteHobby(id: Int)
 }
 
 

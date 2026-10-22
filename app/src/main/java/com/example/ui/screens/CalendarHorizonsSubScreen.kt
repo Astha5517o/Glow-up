@@ -2581,7 +2581,7 @@ fun CloseTodayGentlySubScreen(
                                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        listOf("RESCHEDULE", "KEEP IN BACKLOG", "DECIDE TOMORROW", "DROP").forEach { dec ->
+                                        listOf("RESCHEDULE", "KEEP IN BACKLOG", "SIMPLIFY", "DROP", "DECIDE TOMORROW").forEach { dec ->
                                             OutlinedButton(
                                                 onClick = { onHandleUnfinishedTask(task, dec) },
                                                 shape = RoundedCornerShape(10.dp),
