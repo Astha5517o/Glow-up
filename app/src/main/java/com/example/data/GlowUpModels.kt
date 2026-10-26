@@ -50,9 +50,12 @@ data class UserPreferencesEntity(
     val entertainmentEpisodesAllowed: Int = 1,
     val entertainmentUnlockedToday: Boolean = false,
     val ncscEventName: String = "NCSC National Children's Science Congress",
-    val ncscTargetDate: String = "2026-11-15",
-    val ncscProjectTitle: String = "Smart EcoDrain Shield",
-    val ncscChecklistCsv: String = "Project understanding,Problem statement,Innovation,Prototype",
+    val ncscTargetDate: String = "2026-10-25",
+    val ncscProjectTitle: String = "Smart EcoDrain Shield (Completed & Presented)",
+    val ncscChecklistCsv: String = "Project understanding,Problem statement,Innovation,Prototype,Presentation Delivered",
+    val ncscCompleted: Boolean = true,
+    val halfYearlyStartDate: String = "2026-11-16",
+    val activeStartupIdeaTitle: String = "High-Growth Working App Idea",
     val nextWeekFocus: String = "Solve 5 medium Physics numericals before checking solutions",
     val weeklyWorkedWell: String = "Mission Jeet active recall and problem sets right after lessons.",
     val weeklyDidNotWork: String = "Switching to random videos when stuck on numericals.",
@@ -298,7 +301,24 @@ data class StudyChapterEntity(
     val questionsWrong: Int = 0,
     val questionsSkipped: Int = 0,
     val dominantWeakness: String = "Formula selection", // Concept, Formula selection, Calculation, Application
-    val lastStudiedTimestamp: Long = System.currentTimeMillis()
+    val lastStudiedTimestamp: Long = System.currentTimeMillis(),
+    val specialStudyMaterial: String = "",
+    val keyFormulasText: String = "",
+    val examTrapsAndTricks: String = "",
+    val flashcardsJson: String = "",
+    val halfYearlyWeightage: String = "8 Marks"
+)
+
+data class ChapterFlashcard(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val question: String,
+    val answer: String,
+    val formulaOrTrick: String = "",
+    val repetitions: Int = 0,
+    val intervalDays: Int = 1,
+    val easeFactor: Float = 2.5f,
+    val nextReviewDate: String = "",
+    val lastRating: String = "NEW" // NEW, AGAIN, HARD, GOOD, MASTERED
 )
 
 @Entity(tableName = "error_log_entries")

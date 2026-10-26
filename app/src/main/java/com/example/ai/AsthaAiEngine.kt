@@ -189,63 +189,47 @@ object AsthaAiEngine {
                     "5. Log any formula or setup slip into your Error Log."
             }
 
-            "question" in q || "quiz" in q || "recall" in q -> {
+            "halfyearly" in q || "half-yearly" in q || "16 nov" in q || "exam" in q -> {
+                "HALF-YEARLY EXAM STRATEGY (16 NOV COUNTDOWN):\n" +
+                    "• Physics: Rotational dynamics derivations (Parallel/Perp axes, rolling without slipping, torque equilibrium).\n" +
+                    "• Chemistry Physical: Chemical Thermodynamics (First Law, isothermal vs adiabatic w, ΔG spontaneity).\n" +
+                    "• Chemistry Organic: GOC (Carbocation/carbanion stability, resonance vs inductive, ortho effect).\n" +
+                    "• Mathematics: Complex numbers (Modulus-argument, Argand plane locus, AP/GP sums).\n" +
+                    "• Computer Science: Python functions & mutable data structures.\n" +
+                    "• Secret to High Marks: 20-min active recall of your Special Chapter Vault on blank paper before each mock numerical."
+            }
+
+            "anki" in q || "flashcard" in q || "recall" in q || "question" in q || "quiz" in q -> {
                 val ch = topChapter
-                "ACTIVE RECALL COACH (${ch?.subject ?: "Physics"} — ${ch?.chapterName ?: "Current Chapter"}):\n" +
-                    "Question 1 (Answer in your own words before checking notes):\n" +
-                    "• State the core principle of ${ch?.currentTopic ?: "Rotational Dynamics"} and explain when '${ch?.capturedFormula ?: "τ = Iα"}' applies vs when it breaks down.\n" +
-                    "• Common trap to avoid: ${topError?.whyIMadeIt ?: ch?.weakAreas ?: "Sign conventions and axis choice"}."
+                "ACTIVE RECALL COACH (BETTER THAN ANKI):\n" +
+                    "Unlike standard Anki decks that disconnect from your syllabus, your OS integrates recall directly into your Chapter Vault:\n" +
+                    "• Question 1 (State Aloud): What is the core governing law of ${ch?.currentTopic ?: "this topic"} and its defining condition?\n" +
+                    "• Formula Test: Write '${ch?.keyFormulasText?.lines()?.firstOrNull() ?: ch?.capturedFormula ?: "τ = Iα"}' from memory without checking.\n" +
+                    "• Exam Trap Alert: ${ch?.examTrapsAndTricks?.lines()?.firstOrNull() ?: "Watch sign conventions and units!"}"
             }
 
-            "stuck" in q || "hint" in q -> {
-                "I'M STUCK COACH:\n" +
-                    "Your job isn't to solve it instantly. Your job is to find the next step.\n\n" +
-                    "• Step 1 (2 min): Write down ONLY (a) What is given with units, and (b) What exact quantity is asked.\n" +
-                    "• Step 2 (Hint 1): Which conservation law or definition connects those two quantities?\n" +
-                    "• Tap 'I'M STUCK' inside Study or Focus Mode for the 5-level progressive hint ladder."
+            "feynman" in q -> {
+                val ch = topChapter
+                "FEYNMAN TECHNIQUE CHECK:\n" +
+                    "• Topic: ${ch?.currentTopic ?: "Core Concept"}\n" +
+                    "• Challenge: Explain this concept in 2 plain sentences without technical jargon.\n" +
+                    "• Self-Diagnostic: If you struggle to explain why a formula contains a minus sign or squared factor, that is your high-yield focus area for today!"
             }
 
-            "20 min" in q || "15 min" in q || "minutes" in q -> {
-                if (topError != null) {
-                    "20-MINUTE HIGH-VALUE MISSION:\n" +
-                        "• Review ${errors.count { !it.isResolved }.coerceAtMost(3)} unresolved mistakes in your Error Log (starting with ${topError.subject}: ${topError.questionSummary}).\n" +
-                        "• Re-solve them on blank paper without looking at the correction."
-                } else {
-                    "20-MINUTE HIGH-VALUE MISSION:\n" +
-                        "• Solve 3 targeted medium questions in ${topChapter?.subject ?: "Physics"} (${topChapter?.chapterName ?: "Current Chapter"})."
-                }
-            }
-
-            "missed" in q || "behind" in q || "late" in q || "reset" in q -> {
-                "Let's reset from here. A missed task does not mean the day is ruined.\n\n" +
-                    "• MUST DO: ${topAcademic?.title ?: "1 core 25-min study block"} + Evening wind-down.\n" +
-                    "• SHOULD DO: ${topProject?.name ?: "Krow"} 15-min next action.\n" +
-                    "• CAN POSTPONE: Move lower-priority sets to tomorrow automatically via the Recovery button on TODAY."
-            }
-
-            "scholarship" in q || "profile" in q -> {
-                val weakEvidenceProj = projects.minByOrNull { it.evidenceCheckedCount }
-                "SCHOLARSHIP & PORTFOLIO NEXT STEP:\n" +
-                    "• Don't try to 'improve everything at once.'\n" +
-                    "• Concrete action: Add 1 piece of documented evidence to '${weakEvidenceProj?.name ?: "Krow"}' (Current evidence strength: ${weakEvidenceProj?.evidenceStrengthLabel ?: "BUILDING"}).\n" +
-                    "• Next step: ${weakEvidenceProj?.nextConcreteAction ?: "Document user feedback or testing results."}"
-            }
-
-            "project" in q || "krow" in q -> {
-                val p = projects.find { it.name.lowercase() in q } ?: topProject
-                if (p != null) {
-                    "PROJECT NEXT ACTION — ${p.name} (Stage: ${p.pipelineStage}):\n" +
-                        "• Concrete action: ${p.nextConcreteAction}\n" +
-                        "• Evidence strength: ${p.evidenceStrengthLabel} (${p.evidenceCheckedCount}/9 items verified)."
-                } else {
-                    "Open BUILD to define your next concrete action for Krow or Smart EcoDrain Shield."
-                }
+            "startup" in q || "idea" in q || "app" in q && "project" in q -> {
+                "HIGH-GROWTH STARTUP INCUBATOR:\n" +
+                    "• Vision: Building a valuable working app that students or users love daily.\n" +
+                    "• The 3 Pillars of Valuable Apps:\n" +
+                    "  1. Pain Killer: Solves a daily recurring frustration (e.g. scattered study materials, decision paralysis).\n" +
+                    "  2. Zero Friction: Time to value under 30 seconds (like Morning Launch).\n" +
+                    "  3. Retention Loop: Delivers compounding benefits the more it's used.\n" +
+                    "• Next Step: Open BUILD -> Startup Studio and define your 45-minute MVP sprint."
             }
 
             "ncsc" in q || "ecodrain" in q -> {
-                "NCSC PREPARATION MISSION (${prefs.ncscProjectTitle}):\n" +
-                    "• Target Date: ${prefs.ncscTargetDate}\n" +
-                    "• Today's 10-minute mission: Practice explaining the problem statement and core filtration/sensor innovation aloud in 90 seconds, then answer 1 likely judge question on sustainability."
+                "NCSC STATUS: OFFICIALLY COMPLETED & ARCHIVED!\n" +
+                    "• Congratulations Astha! Your Smart EcoDrain Shield was fully presented and documented.\n" +
+                    "• All primary focus now transitions to your Half-Yearly Exams (starting 16 Nov) across all subjects (Physics, Chemistry, Maths, CS) and your new high-growth startup app."
             }
 
             else -> {

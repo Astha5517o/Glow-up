@@ -20,9 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.scale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -76,7 +82,7 @@ fun MoveScreen(
     onLogRestDay: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = listOf("ALL", "MORNING", "POSTURE", "STRENGTH", "RELAX")
+    val categories = listOf("ALL", "DANCE", "MEDITATION", "MORNING", "POSTURE", "STRENGTH", "RELAX")
     var selectedCategory by rememberSaveable { mutableStateOf("ALL") }
 
     val filteredRoutines = if (selectedCategory == "ALL") {
@@ -221,25 +227,29 @@ fun MoveScreen(
 
         // Grouped or Filtered Routines
         if (selectedCategory == "ALL") {
-            listOf("MORNING", "POSTURE", "STRENGTH", "RELAX").forEach { cat ->
+            listOf("DANCE", "MEDITATION", "MORNING", "POSTURE", "STRENGTH", "RELAX").forEach { cat ->
                 val catRoutines = DefaultWellnessData.movementRoutines.filter { it.category == cat }
-                item(key = "header_$cat") {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    SectionHeader(
-                        title = cat,
-                        subtitle = when (cat) {
-                            "MORNING" -> "Wake up your joints and energy gently"
-                            "POSTURE" -> "Release desk, backpack, and screen tension"
-                            "STRENGTH" -> "Feel steady, grounded, and capable in your body"
-                            else -> "Slow down, stretch softly, and breathe"
-                        }
-                    )
-                }
-                items(catRoutines, key = { it.id }) { routine ->
-                    RoutineCard(
-                        routine = routine,
-                        onStartClick = { onStartRoutine(routine) }
-                    )
+                if (catRoutines.isNotEmpty()) {
+                    item(key = "header_$cat") {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SectionHeader(
+                            title = cat,
+                            subtitle = when (cat) {
+                                "DANCE" -> "Rhythm, joy & coordination — zero calorie counting, pure musical flow"
+                                "MEDITATION" -> "Gentle 4-4-4 breathing & tranquil grounding"
+                                "MORNING" -> "Wake up your joints and energy gently"
+                                "POSTURE" -> "Release desk, backpack, and screen tension"
+                                "STRENGTH" -> "Feel steady, grounded, and capable in your body"
+                                else -> "Slow down, stretch softly, and breathe"
+                            }
+                        )
+                    }
+                    items(catRoutines, key = { it.id }) { routine ->
+                        RoutineCard(
+                            routine = routine,
+                            onStartClick = { onStartRoutine(routine) }
+                        )
+                    }
                 }
             }
         } else {
@@ -342,22 +352,54 @@ fun TimerScreen(
 
         Spacer(modifier = Modifier.weight(0.5f))
 
-        // Circular Countdown Timer
+        val isMeditation = routine.category == "MEDITATION"
+        val isDance = routine.category == "DANCE"
+
+        val infiniteTransition = rememberInfiniteTransition(label = "breathAnim")
+        val breathScale by infiniteTransition.animateFloat(
+            initialValue = 0.86f,
+            targetValue = 1.14f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(4000),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "breathScale"
+        )
+
+        // Visual Centerpiece (Animated Breathing Visual for Meditation or Circular Countdown Timer)
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(210.dp)
+            modifier = Modifier.size(220.dp)
         ) {
+            if (isMeditation) {
+                // Expanding and contracting breathing ring for grounding
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    modifier = Modifier
+                        .size(200.dp)
+                        .scale(if (isPaused) 1f else breathScale)
+                ) {}
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    modifier = Modifier
+                        .size(150.dp)
+                        .scale(if (isPaused) 1f else breathScale)
+                ) {}
+            }
+
             CircularProgressIndicator(
                 progress = { 1f },
                 modifier = Modifier.size(210.dp),
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
-                strokeWidth = 12.dp
+                strokeWidth = 10.dp
             )
             CircularProgressIndicator(
                 progress = { stepProgress },
                 modifier = Modifier.size(210.dp),
                 color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
-                strokeWidth = 12.dp,
+                strokeWidth = 10.dp,
                 strokeCap = StrokeCap.Round
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -369,9 +411,15 @@ fun TimerScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = if (isPaused) "Paused — take your time" else "Breathe steadily",
+                    text = when {
+                        isPaused -> "Paused — take your time"
+                        isMeditation -> "Inhale • Hold • Exhale"
+                        isDance -> "Feel the music & groove"
+                        else -> "Breathe steadily"
+                    },
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

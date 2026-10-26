@@ -60,6 +60,7 @@ import com.example.data.UserPreferencesEntity
 import com.example.ui.components.PrimaryButton
 import com.example.ui.components.SecondaryButton
 import com.example.ui.components.SectionHeader
+import com.example.ui.components.SkeuoCard
 import com.example.ui.components.StatusBadgeChip
 import com.example.ui.theme.GentleSuccessGreen
 import com.example.ui.theme.GentleSuccessLight
@@ -154,11 +155,9 @@ fun ProfileScreen(
     ) {
         // STUDENT PORTFOLIO HEADER CARD
         item {
-            Card(
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
+            SkeuoCard(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = 3.5.dp
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
@@ -538,11 +537,9 @@ fun ProfileScreen(
                     }
                 } else {
                     items(filteredAchievements, key = { it.id }) { ach ->
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            modifier = Modifier.fillMaxWidth()
+                        SkeuoCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = 2.5.dp
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Row(
@@ -860,13 +857,11 @@ private fun OpportunityCard(
     onCycleStatus: () -> Unit,
     onVerify: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    SkeuoCard(
         modifier = Modifier
-            .fillMaxWidth()
-            .testTag("opportunity_card_${opportunity.id}")
+            .fillMaxWidth(),
+        elevation = 2.5.dp,
+        testTag = "opportunity_card_${opportunity.id}"
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(

@@ -63,13 +63,17 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.AiChatMessage
 import com.example.data.DefaultWellnessData
 import com.example.data.ErrorLogEntity
 import com.example.data.OsTaskEntity
 import com.example.data.PracticeQuestionItem
 import com.example.data.StudyChapterEntity
+import com.example.ui.components.ClayButton
+import com.example.ui.components.ClayCard
 import com.example.ui.components.PrimaryButton
 import com.example.ui.components.SecondaryButton
 import com.example.ui.components.SectionHeader
@@ -102,8 +106,7 @@ fun FocusModeSubScreen(
 
     var secondsRemaining by rememberSaveable { mutableIntStateOf(durationMinutes * 60) }
     var isPaused by rememberSaveable { mutableStateOf(false) }
-    var currentStep by rememberSaveable { mutableIntStateOf(1) }
-    var showCompletionCheckIn by rememberSaveable { mutableStateOf(false) }
+    var showCompletionScreen by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isPaused, secondsRemaining) {
         if (!isPaused && secondsRemaining > 0) {
@@ -112,408 +115,249 @@ fun FocusModeSubScreen(
         }
     }
 
-    var showDistractionResetModal by rememberSaveable { mutableStateOf(false) }
-    var parkedThoughtInput by rememberSaveable { mutableStateOf("") }
-    var parkedThoughtsList by rememberSaveable { mutableStateOf(listOf<String>()) }
-
     val totalSeconds = (durationMinutes * 60).coerceAtLeast(1)
     val timerProgress = (secondsRemaining.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFFFAF8F3))
             .padding(horizontal = 24.dp, vertical = 20.dp)
             .testTag("focus_mode_screen"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Minimal Header (No distracting bottom nav)
+        // Minimal Header (No distraction)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onClose) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Exit Focus Mode")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Exit Focus Mode", tint = Color(0xFF716E7D))
             }
-            Text(
-                text = "FOCUS MODE",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.size(48.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFEEE9FF),
+                border = BorderStroke(1.dp, Color(0xFF7561C9).copy(alpha = 0.2f))
+            ) {
+                Text(
+                    text = "FOCUS MODE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF7561C9),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+            // Discreet "I'm stuck" option in header
+            TextButton(
+                onClick = onOpenImStuck,
+                modifier = Modifier.testTag("focus_stuck_button")
+            ) {
+                Text(
+                    text = "I'm stuck",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF716E7D),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Task name
         Text(
             text = taskTitle,
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF292735),
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // One clear instruction
         Text(
-            text = "Current mission: $purpose",
+            text = purpose.ifBlank { currentStepText },
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            color = Color(0xFF716E7D),
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
         )
 
-        Spacer(modifier = Modifier.weight(0.4f))
+        Spacer(modifier = Modifier.weight(0.3f))
 
-        // Circular Timer
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(220.dp)
+        // Large Clay-Style Progress Timer
+        Surface(
+            shape = CircleShape,
+            color = Color.White,
+            shadowElevation = 8.dp,
+            border = BorderStroke(2.dp, Color(0xFFF0EBE1)),
+            modifier = Modifier.size(240.dp)
         ) {
-            CircularProgressIndicator(
-                progress = { 1f },
-                modifier = Modifier.size(220.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                strokeWidth = 10.dp
-            )
-            CircularProgressIndicator(
-                progress = { timerProgress },
-                modifier = Modifier.size(220.dp),
-                color = if (isPaused) WarmPeachHighlight else MaterialTheme.colorScheme.primary,
-                strokeWidth = 10.dp,
-                strokeCap = StrokeCap.Round
-            )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val mins = secondsRemaining / 60
-                val secs = secondsRemaining % 60
-                Text(
-                    text = "%02d:%02d".format(mins, secs),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = if (isPaused) "PAUSED" else "IN FOCUS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Current Step & Progress Card
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                CircularProgressIndicator(
+                    progress = { 1f },
+                    modifier = Modifier.size(200.dp),
+                    color = Color(0xFFEEE9FF),
+                    strokeWidth = 12.dp
+                )
+                CircularProgressIndicator(
+                    progress = { timerProgress },
+                    modifier = Modifier.size(200.dp),
+                    color = if (isPaused) Color(0xFFDE9858) else Color(0xFF7561C9),
+                    strokeWidth = 12.dp,
+                    strokeCap = StrokeCap.Round
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val mins = secondsRemaining / 60
+                    val secs = secondsRemaining % 60
                     Text(
-                        text = "Progress: $currentStep / $totalSteps",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        text = "%02d:%02d".format(mins, secs),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF292735)
                     )
-                    TextButton(
-                        onClick = { if (currentStep < totalSteps) currentStep += 1 }
-                    ) {
-                        Text("+ Step Done")
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isPaused) "PAUSED" else "IN FLOW",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isPaused) Color(0xFFDE9858) else Color(0xFF7561C9)
+                    )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                LinearProgressIndicator(
-                    progress = { currentStep.toFloat() / totalSteps.coerceAtLeast(1).toFloat() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = GentleSuccessGreen,
-                    trackColor = MaterialTheme.colorScheme.primaryContainer
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = currentStepText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
             }
         }
 
-        Spacer(modifier = Modifier.weight(0.6f))
+        Spacer(modifier = Modifier.weight(0.5f))
 
-        // Action Controls: [PAUSE] [DISTRACTED] [STUCK]
+        // Tactile Action Buttons: Pause/Resume and Finish
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedButton(
+            ClayButton(
+                text = if (isPaused) "Resume" else "Pause",
+                icon = if (isPaused) Icons.Default.PlayArrow else Icons.Filled.Pause,
                 onClick = { isPaused = !isPaused },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
-                    .testTag("focus_pause_button")
-            ) {
-                Icon(
-                    imageVector = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (isPaused) "RESUME" else "PAUSE", style = MaterialTheme.typography.labelMedium)
-            }
+                containerColor = if (isPaused) Color(0xFF7561C9) else Color(0xFFEEE9FF),
+                contentColor = if (isPaused) Color.White else Color(0xFF7561C9),
+                modifier = Modifier.weight(1f),
+                testTag = "focus_pause_button"
+            )
 
-            OutlinedButton(
-                onClick = {
-                    isPaused = true
-                    showDistractionResetModal = true
-                },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .weight(1.2f)
-                    .height(52.dp)
-                    .testTag("focus_distracted_button")
-            ) {
-                Text("💭 Distracted", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            }
-
-            FilledTonalButton(
-                onClick = onOpenImStuck,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .weight(0.9f)
-                    .height(52.dp)
-                    .testTag("focus_stuck_button")
-            ) {
-                Text("🧩 STUCK", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            }
+            ClayButton(
+                text = "Finish",
+                icon = Icons.Default.Check,
+                onClick = { showCompletionScreen = true },
+                containerColor = Color(0xFF85BE9B),
+                contentColor = Color.White,
+                modifier = Modifier.weight(1f),
+                testTag = "focus_finish_button"
+            )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = { showCompletionCheckIn = true },
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GentleSuccessGreen,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .testTag("focus_finish_button")
-        ) {
-            Icon(Icons.Filled.Check, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("FINISH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 
-    // Gentle In-Focus Distraction Recovery & Thought Parking Dialog
-    if (showDistractionResetModal) {
+    // -------------------------------------------------------------
+    // GENTLE COMPLETION SCREEN (Section 6)
+    // -------------------------------------------------------------
+    if (showCompletionScreen) {
         AlertDialog(
-            onDismissRequest = {
-                showDistractionResetModal = false
-                isPaused = false
-            },
+            onDismissRequest = { showCompletionScreen = false },
             title = {
-                Text("🌿 Gentle Focus Reset", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Nice work. You made progress.",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF292735)
+                )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Wandering focus is natural human biology, not a failure. No shame, and no streak lost.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Every focused minute counts towards your personal mastery and clarity.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF716E7D)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
 
+                    // 1. Review what I learned
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                        onClick = {
+                            showCompletionScreen = false
+                            onFinishFocus(linkedTask, taskTitle, durationMinutes, "Fully focused", "None")
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFEEE9FF),
+                        border = BorderStroke(1.dp, Color(0xFF7561C9).copy(alpha = 0.2f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Park Thought for Later (Clear Your Head):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                OutlinedTextField(
-                                    value = parkedThoughtInput,
-                                    onValueChange = { parkedThoughtInput = it },
-                                    placeholder = { Text("Jot stray thought...", style = MaterialTheme.typography.bodySmall) },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                FilledTonalButton(
-                                    onClick = {
-                                        if (parkedThoughtInput.isNotBlank()) {
-                                            parkedThoughtsList = parkedThoughtsList + parkedThoughtInput.trim()
-                                            parkedThoughtInput = ""
-                                        }
-                                    }
-                                ) {
-                                    Text("Park")
-                                }
-                            }
-                            if (parkedThoughtsList.isNotEmpty()) {
-                                Text(
-                                    text = "Parked: ${parkedThoughtsList.joinToString(", ")}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = GentleSuccessGreen
-                                )
-                            }
-                        }
+                        Text(
+                            text = "📖 Review what I learned",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF7561C9),
+                            modifier = Modifier.padding(14.dp)
+                        )
                     }
 
-                    Text("Choose how to reset:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-
-                    OutlinedButton(
+                    // 2. Take a break
+                    Surface(
                         onClick = {
-                            showDistractionResetModal = false
-                            isPaused = false
+                            showCompletionScreen = false
+                            onFinishFocus(linkedTask, taskTitle, durationMinutes, "Fully focused", "None")
                         },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFDDF2E5),
+                        border = BorderStroke(1.dp, Color(0xFF85BE9B).copy(alpha = 0.2f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("1. Take 3 deep breaths & resume timer")
+                        Text(
+                            text = "🍵 Take a restful break",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF285E3D),
+                            modifier = Modifier.padding(14.dp)
+                        )
                     }
 
-                    OutlinedButton(
+                    // 3. Return to Today
+                    Surface(
                         onClick = {
-                            secondsRemaining = (15 * 60).coerceAtMost(secondsRemaining)
-                            showDistractionResetModal = false
-                            isPaused = false
+                            showCompletionScreen = false
+                            onFinishFocus(linkedTask, taskTitle, durationMinutes, "Fully focused", "None")
                         },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFFAF8F3),
+                        border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("2. Shorten this session to 15m")
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            showDistractionResetModal = false
-                            showCompletionCheckIn = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("3. Finish calmly and take a break")
+                        Text(
+                            text = "🏠 Return to Today",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF292735),
+                            modifier = Modifier.padding(14.dp)
+                        )
                     }
                 }
             },
-            confirmButton = {
+            confirmButton = {},
+            dismissButton = {
                 TextButton(
                     onClick = {
-                        showDistractionResetModal = false
-                        isPaused = false
+                        showCompletionScreen = false
+                        onFinishFocus(linkedTask, taskTitle, durationMinutes, "Fully focused", "None")
                     }
                 ) {
-                    Text("Resume")
-                }
-            }
-        )
-    }
-
-    // Post-Focus Reflection ("How focused were you?" + private distraction pattern tracking)
-    if (showCompletionCheckIn) {
-        var focusRating by rememberSaveable { mutableStateOf("Fully focused") }
-        var distractionSource by rememberSaveable { mutableStateOf("None") }
-
-        val distractionCategories = listOf(
-            "YouTube",
-            "Anime",
-            "Social media",
-            "Random browsing",
-            "Unclear task",
-            "Tiredness",
-            "Phone",
-            "Other"
-        )
-
-        AlertDialog(
-            onDismissRequest = { showCompletionCheckIn = false },
-            title = { Text("How focused were you?") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    listOf("Fully focused", "Mostly focused", "Distracted").forEach { rating ->
-                        val isSel = focusRating == rating
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    focusRating = rating
-                                    if (rating == "Fully focused") distractionSource = "None"
-                                    else if (distractionSource == "None") distractionSource = "Unclear task"
-                                }
-                        ) {
-                            Text(
-                                text = rating,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                            )
-                        }
-                    }
-
-                    if (focusRating == "Distracted" || focusRating == "Mostly focused") {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "What pulled you away? (Tracked privately for pattern analysis — no guilt)",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        @OptIn(ExperimentalLayoutApi::class)
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            distractionCategories.forEach { src ->
-                                val sel = distractionSource == src
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = if (sel) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (sel) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
-                                    ),
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .clickable { distractionSource = src }
-                                ) {
-                                    Text(
-                                        text = src,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    Text("Close", color = Color(0xFF716E7D))
                 }
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showCompletionCheckIn = false
-                        onFinishFocus(
-                            linkedTask,
-                            taskTitle,
-                            durationMinutes,
-                            focusRating,
-                            distractionSource
-                        )
-                    },
-                    modifier = Modifier.testTag("confirm_finish_focus_button")
-                ) {
-                    Text("Complete & Update Plan")
-                }
-            }
+            shape = RoundedCornerShape(26.dp),
+            containerColor = Color.White
         )
     }
 }

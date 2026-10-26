@@ -54,6 +54,7 @@ import com.example.ui.screens.AsthaAiSubScreen
 import com.example.ui.screens.BrainDumpSubScreen
 import com.example.ui.screens.BuildScreen
 import com.example.ui.screens.CalendarHorizonsSubScreen
+import com.example.ui.screens.ChapterMaterialFolderSubScreen
 import com.example.ui.screens.CloseTodayGentlySubScreen
 import com.example.ui.screens.ConfidenceCheckInSubScreen
 import com.example.ui.screens.DailyRoutineGeneratorSubScreen
@@ -67,11 +68,14 @@ import com.example.ui.screens.MorningModeSubScreen
 import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.OneShotLearningSubScreen
 import com.example.ui.screens.PracticeQuestionsSubScreen
+import com.example.ui.screens.HobbiesAndJoySubScreen
+import com.example.ui.screens.MissionJeetSubScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.RecoveryResetSubScreen
 import com.example.ui.screens.SchoolModeSubScreen
 import com.example.ui.screens.SettingsSubScreen
 import com.example.ui.screens.SleepSubScreen
+import com.example.ui.screens.StartupIdeaIncubatorSubScreen
 import com.example.ui.screens.StudyResetSubScreen
 import com.example.ui.screens.StudyScreen
 import com.example.ui.screens.TimerScreen
@@ -88,7 +92,7 @@ import com.example.ui.screens.ProfileEvidenceLedgerSubScreen
 import com.example.ui.screens.ScenarioPlanningSubScreen
 import com.example.ui.screens.ScholarshipStrategySubScreen
 import com.example.ui.screens.ScienceExhibitionSubScreen
-import com.example.ui.theme.GlowUpTheme
+import com.example.ui.theme.AsthaTheme
 import com.example.viewmodel.ActiveSubScreen
 import com.example.viewmodel.BottomNavTab
 import com.example.viewmodel.GlowUpViewModel
@@ -175,36 +179,13 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
         }
     }
 
-    GlowUpTheme(
+    AsthaTheme(
         themeMode = preferences.themeMode,
         darkTheme = preferences.darkModeEnabled
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             contentWindowInsets = WindowInsets.safeDrawing,
-            floatingActionButton = {
-                // Compact persistent ASTHA AI entry point on main tabs (except when already inside a subscreen)
-                if (preferences.onboardingCompleted && activeSubScreen == ActiveSubScreen.None) {
-                    ExtendedFloatingActionButton(
-                        onClick = { viewModel.openSubScreen(ActiveSubScreen.AsthaAiSheet) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        shape = RoundedCornerShape(18.dp),
-                        modifier = Modifier.testTag("fab_astha_ai")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
-                            contentDescription = "Ask ASTHA AI"
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "ASTHA AI",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            },
             bottomBar = {
                 if (preferences.onboardingCompleted && activeSubScreen == ActiveSubScreen.None) {
                     BottomNavigation(
@@ -748,7 +729,7 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                 onClose = { viewModel.closeSubScreen() },
                                 onSaveLecture = { viewModel.saveMissionJeetLecture(it) },
                                 onUpdateLecture = { viewModel.updateMissionJeetLecture(it) },
-                                onStartFocusSession = { task ->
+                                onStartFocusSession = { task: com.example.data.OsTaskEntity ->
                                     viewModel.openSubScreen(
                                         ActiveSubScreen.FocusMode(
                                             taskTitle = task.title,
@@ -774,24 +755,51 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                         }
 
                         is ActiveSubScreen.DistractionRecoverySheet -> {
-                            MorningModeSubScreen(
-                                academicTopics = academicTopics,
-                                calendarEvents = calendarEvents,
-                                generatedPlan = morningDecisionPlan,
-                                availableMinutes = 45,
-                                currentEnergy = preferences.currentEnergyLevel,
+                            RecoveryResetSubScreen(
+                                tasks = osTasks,
                                 onClose = { viewModel.closeSubScreen() },
-                                onGenerateMorningPlan = { mins, energy ->
-                                    viewModel.generateMorningDecisionPlan(mins, energy)
+                                onUpdateTaskBucket = { task, newBucket ->
+                                    viewModel.rescheduleOsTask(task, task.scheduledTimeSlot, newBucket)
                                 },
-                                onStartPriorityFocus = { prio ->
+                                onRegeneratePlan = { viewModel.generateDailyRoutine(preferences) }
+                            )
+                        }
+
+                        is ActiveSubScreen.ChapterMaterialFolderSheet -> {
+                            ChapterMaterialFolderSubScreen(
+                                chapter = sub.chapter,
+                                onClose = { viewModel.closeSubScreen() },
+                                onUpdateChapter = { updated ->
+                                    viewModel.updateChapter(updated)
+                                },
+                                onAskAiQuestion = { prompt ->
+                                    com.example.ai.AsthaAiEngine.askAsthaAi(
+                                        userPrompt = prompt,
+                                        prefs = preferences,
+                                        tasks = osTasks,
+                                        chapters = studyChapters,
+                                        errors = errorLogs,
+                                        projects = projects,
+                                        opportunities = opportunities
+                                    )
+                                }
+                            )
+                        }
+
+                        is ActiveSubScreen.StartupIdeaIncubatorSheet -> {
+                            StartupIdeaIncubatorSubScreen(
+                                project = sub.project ?: projects.firstOrNull(),
+                                onClose = { viewModel.closeSubScreen() },
+                                onSaveProject = { updated ->
+                                    viewModel.updateProject(updated)
+                                },
+                                onStartFocusSession = { title, minutes ->
                                     viewModel.openSubScreen(
                                         ActiveSubScreen.FocusMode(
-                                            taskTitle = "${prio.subject}: ${prio.exactTopic}",
-                                            purpose = prio.startingResourceOrMethod,
-                                            durationMinutes = prio.estimatedMinutes,
-                                            currentStepText = prio.activeRecallStep,
-                                            totalSteps = 5
+                                            taskTitle = "🚀 Startup Sprint: $title",
+                                            purpose = "Execution sprint for high-growth working app",
+                                            durationMinutes = minutes,
+                                            currentStepText = "Deep work on MVP code & user feedback"
                                         )
                                     )
                                 }
@@ -811,6 +819,8 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         calendarEvents = calendarEvents,
                                         monthlyGoals = monthlyGoals,
                                         recentWins = recentWins,
+                                        habits = habits,
+                                        onToggleHabit = { viewModel.toggleHabit(it) },
                                         onSetEnergyLevel = { viewModel.setEnergyLevel(it) },
                                         onSetDayMode = { viewModel.setDayMode(it) },
                                         onStartNowRecommendation = { viewModel.startFocusForRecommendation(it) },
@@ -876,6 +886,9 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         },
                                         onOpenMissionJeetTracker = {
                                             viewModel.openSubScreen(ActiveSubScreen.MissionJeetSheet)
+                                        },
+                                        onOpenChapterMaterialFolder = { chapter ->
+                                            viewModel.openSubScreen(ActiveSubScreen.ChapterMaterialFolderSheet(chapter))
                                         }
                                     )
                                 }
@@ -913,6 +926,9 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         },
                                         onOpenProfileEvidence = {
                                             viewModel.openSubScreen(ActiveSubScreen.ProfileEvidenceSheet)
+                                        },
+                                        onOpenStartupIncubator = {
+                                            viewModel.openSubScreen(ActiveSubScreen.StartupIdeaIncubatorSheet())
                                         }
                                     )
                                 }
@@ -922,6 +938,7 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         preferences = preferences,
                                         habits = habits,
                                         skincareSteps = skincareSteps,
+                                        hydrationReminders = hydrationReminders,
                                         onToggleHabit = { viewModel.toggleHabit(it) },
                                         onAddCustomHabit = { title, subTitle, emoji ->
                                             viewModel.addCustomHabit(title, subTitle, emoji)
@@ -930,6 +947,7 @@ fun GlowUpApp(viewModel: GlowUpViewModel) {
                                         onToggleSkincareStep = { viewModel.toggleSkincareStep(it) },
                                         onAddSkincareStep = { period, title -> viewModel.addSkincareStep(period, title) },
                                         onDeleteSkincareStep = { viewModel.deleteSkincareStep(it) },
+                                        onResetTodaysHabits = { viewModel.resetTodaysHabits() },
                                         onOpenSubScreen = { viewModel.openSubScreen(it) }
                                     )
                                 }

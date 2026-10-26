@@ -197,14 +197,30 @@ object GlowUpNotificationHelper {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
-            } else {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+            // Pierces Android Doze Mode reliably for early morning (e.g. 4:00 AM) and time-critical reminders
+            val showIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            val showPendingIntent = PendingIntent.getActivity(
+                context,
+                requestCode,
+                showIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val clockInfo = AlarmManager.AlarmClockInfo(triggerAtMillis, showPendingIntent)
+            alarmManager.setAlarmClock(clockInfo, pendingIntent)
         } catch (_: SecurityException) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+                } else {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+                }
+            } catch (_: Exception) {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+            }
         }
     }
 
@@ -229,15 +245,16 @@ object GlowUpNotificationHelper {
             set(Calendar.HOUR_OF_DAY, hour24.coerceIn(0, 23))
             set(Calendar.MINUTE, minute.coerceIn(0, 59))
             set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
 
-        // Schedule reminder on the event day (or chosen time)
+        // Schedule reminder for the event at its exact scheduled time
         scheduleOneShotTimestampReminder(
             context = context,
-            requestCode = 40000 + eventId,
+            requestCode = 40000 + (eventId and 0x7FFF),
             triggerAtMillis = eventCal.timeInMillis,
             title = eventTitle,
-            message = "Today's scheduled event ($preference). Open ASTHA OS to view your checklist."
+            message = "Scheduled now ($preference). Open ASTHA OS to view your plan."
         )
 
         // Also schedule 1-day-before calm preparation reminder at 6:00 PM if applicable
@@ -246,10 +263,11 @@ object GlowUpNotificationHelper {
                 add(Calendar.DAY_OF_YEAR, -1)
                 set(Calendar.HOUR_OF_DAY, 18)
                 set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
             }
             scheduleOneShotTimestampReminder(
                 context = context,
-                requestCode = 45000 + eventId,
+                requestCode = 45000 + (eventId and 0x7FFF),
                 triggerAtMillis = dayBeforeCal.timeInMillis,
                 title = "$eventTitle starts tomorrow",
                 message = "Review your preparation checklist and pack your materials tonight."
@@ -265,38 +283,24 @@ object GlowUpNotificationHelper {
         title: String,
         message: String
     ) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-        val intent = Intent(context, ReminderBroadcastReceiver::class.java).apply {
-            putExtra(ReminderBroadcastReceiver.EXTRA_ID, requestCode)
-            putExtra(ReminderBroadcastReceiver.EXTRA_TITLE, title)
-            putExtra(ReminderBroadcastReceiver.EXTRA_MESSAGE, message)
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour24)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
-            if (before(Calendar.getInstance())) {
+            set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
         }
 
-        try {
-            alarmManager.setInexactRepeating(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            )
-        } catch (_: SecurityException) {
-            // Fallback if alarm scheduling restricted
-        }
+        // Use exact alarm clock schedule so early morning (4:00 AM) and evening check-ins pierce Doze mode
+        scheduleOneShotTimestampReminder(
+            context = context,
+            requestCode = requestCode,
+            triggerAtMillis = calendar.timeInMillis,
+            title = title,
+            message = message
+        )
     }
 
     fun cancelReminder(context: Context, requestCode: Int) {
@@ -309,6 +313,43 @@ object GlowUpNotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         alarmManager.cancel(pendingIntent)
+    }
+
+    fun scheduleInstantTestReminder(context: Context, delaySeconds: Int = 5) {
+        val trigger = System.currentTimeMillis() + (delaySeconds * 1000L)
+        scheduleOneShotTimestampReminder(
+            context = context,
+            requestCode = 9999,
+            triggerAtMillis = trigger,
+            title = "ASTHA OS • Reminder Verified",
+            message = "Your scheduled alarms & notifications are active and delivering reliably."
+        )
+    }
+
+    data class ReminderDiagnostics(
+        val notificationsAllowed: Boolean,
+        val exactAlarmsAllowed: Boolean,
+        val statusSummary: String
+    )
+
+    fun getDiagnostics(context: Context): ReminderDiagnostics {
+        val nm = NotificationManagerCompat.from(context)
+        val notifAllowed = nm.areNotificationsEnabled()
+        val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        val exactAllowed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            am?.canScheduleExactAlarms() ?: true
+        } else true
+
+        val summary = when {
+            !notifAllowed -> "Notifications are disabled in system settings. Tap to grant permission."
+            !exactAllowed -> "Exact alarms restricted. Reminders will use high-priority fallback."
+            else -> "Alarm system healthy • Piercing Doze mode active"
+        }
+        return ReminderDiagnostics(
+            notificationsAllowed = notifAllowed,
+            exactAlarmsAllowed = exactAllowed,
+            statusSummary = summary
+        )
     }
 
     data class GentleNotificationSample(

@@ -310,7 +310,11 @@ object DefaultWellnessData {
             questionsPartial = 2,
             questionsWrong = 2,
             questionsSkipped = 1,
-            dominantWeakness = "Formula selection"
+            dominantWeakness = "Formula selection",
+            specialStudyMaterial = "• Parallel Axis Theorem: I = I_cm + M d^2 (valid ONLY when referencing I_cm).\n• Perpendicular Axis Theorem: I_z = I_x + I_y (valid ONLY for planar 2D laminar bodies).\n• Pure rolling condition without slipping: v_cm = Rω, a_cm = Rα.\n• Work done by static friction during pure rolling on stationary surface is strictly ZERO.",
+            keyFormulasText = "1. τ = r × F = Iα = dL/dt\n2. L_total = I_cm ω + r_cm × (M v_cm)\n3. I_ring = MR^2, I_disk = 1/2 MR^2, I_sphere = 2/5 MR^2\n4. a_rolling = (g sin θ) / (1 + I_cm/(MR^2))\n5. KE_total = 1/2 M v_cm^2 + 1/2 I_cm ω^2",
+            examTrapsAndTricks = "• Never apply parallel axis theorem between two arbitrary axes; one MUST pass through COM.\n• Friction on an incline: static friction acts UP the incline during pure rolling down.\n• Sign convention: counter-clockwise torque is positive, clockwise is negative.",
+            halfYearlyWeightage = "10 Marks (Guaranteed Derivation & Numerical)"
         ),
         StudyChapterEntity(
             subject = "Chemistry Physical",
@@ -329,7 +333,11 @@ object DefaultWellnessData {
             questionsPartial = 2,
             questionsWrong = 2,
             questionsSkipped = 0,
-            dominantWeakness = "Calculation"
+            dominantWeakness = "Calculation",
+            specialStudyMaterial = "• State functions: U, H, S, G depend only on initial and final states.\n• Chemistry sign convention: Work done ON system is positive: w = -P_ext ΔV.\n• Isothermal expansion of ideal gas: ΔT = 0, so ΔU = 0 and q = -w.\n• Spontaneity condition at constant T and P: ΔG < 0.",
+            keyFormulasText = "1. ΔU = q + w (w = -P_ext ΔV)\n2. ΔH = ΔU + Δn_g R T\n3. w_rev = -2.303 n R T log(V2/V1)\n4. ΔS_sys = q_rev / T\n5. ΔG° = -RT ln K_eq = -2.303 RT log K_eq",
+            examTrapsAndTricks = "• Units of R: 8.314 J/(mol·K) vs 0.0821 L·atm/(mol·K). 1 L·atm = 101.325 Joules!\n• In ΔG = ΔH - TΔS, T must ALWAYS be in Kelvin.\n• Watch state of reactants for Δn_g: count gaseous moles ONLY.",
+            halfYearlyWeightage = "8 Marks (High Numerical Weightage)"
         ),
         StudyChapterEntity(
             subject = "Chemistry Organic/Inorganic",
@@ -348,7 +356,11 @@ object DefaultWellnessData {
             questionsPartial = 1,
             questionsWrong = 2,
             questionsSkipped = 0,
-            dominantWeakness = "Concept"
+            dominantWeakness = "Concept",
+            specialStudyMaterial = "• Inductive effect (-I / +I) is transmitted through sigma bonds and drops off sharply after 3 carbons.\n• Resonance involves delocalization of pi electrons or unshared pairs in a conjugated system.\n• Carbocation stability: 3° > 2° > 1° > methyl.\n• Carbanion stability: methyl > 1° > 2° > 3°.",
+            keyFormulasText = "1. Aromaticity (Hückel's Rule): (4n + 2) π electrons, cyclic, planar, fully conjugated\n2. Stability: Aromatic > Conjugated > 3° > 2° > 1°\n3. Acidic strength: Increases with electron-withdrawing groups (-M, -I)\n4. Basic strength: Increases with electron-donating groups (+M, +I)",
+            examTrapsAndTricks = "• Halogen Exception: -I > +M (deactivating overall yet ortho/para directing on benzene ring).\n• Ortho Effect: Any ortho substituent on benzoic acid increases acidity due to steric inhibition of resonance.",
+            halfYearlyWeightage = "9 Marks (Conceptual Foundation)"
         ),
         StudyChapterEntity(
             subject = "Mathematics",
@@ -367,12 +379,16 @@ object DefaultWellnessData {
             questionsPartial = 3,
             questionsWrong = 2,
             questionsSkipped = 1,
-            dominantWeakness = "Application"
+            dominantWeakness = "Application",
+            specialStudyMaterial = "• Modulus properties: |z1 z2| = |z1| |z2|, |z1/z2| = |z1|/|z2|, |z|^2 = z · z̄.\n• Principal argument lies strictly in (-π, π].\n• Cube roots of unity: 1 + ω + ω^2 = 0, ω^3 = 1.\n• Geometric locus: |z - z1| = |z - z2| is the perpendicular bisector of segment joining z1 and z2.",
+            keyFormulasText = "1. |z|^2 = z · z̄\n2. Triangle inequality: ||z1| - |z2|| <= |z1 + z2| <= |z1| + |z2|\n3. AP sum: S_n = n/2 [2a + (n-1)d]\n4. GP sum: S_n = a(1 - r^n)/(1 - r), S_inf = a/(1 - r) for |r| < 1\n5. AM-GM: (a + b)/2 >= sqrt(ab) for positive a, b",
+            examTrapsAndTricks = "• Principal argument quadrant: Quadrant 2 is (π - α), Quadrant 3 is -(π - α), Quadrant 4 is -α.\n• AM-GM equality condition holds only when all terms are strictly equal.",
+            halfYearlyWeightage = "10 Marks (High Weightage Algebra)"
         ),
         StudyChapterEntity(
             subject = "Computer Science / AI",
-            chapterName = "Python Data Structures & LLM Agents",
-            currentTopic = "Dictionaries, Recursion & Prompt/Tool Structuring",
+            chapterName = "Python Data Structures & Functions",
+            currentTopic = "Dictionaries, Recursion & Clean Modular Functions",
             weakAreas = "Tracing base cases in recursive tree/list functions",
             videoResource = "CS Lab & AI Builder Docs",
             purpose = "Concept",
@@ -386,7 +402,11 @@ object DefaultWellnessData {
             questionsPartial = 1,
             questionsWrong = 0,
             questionsSkipped = 0,
-            dominantWeakness = "Application"
+            dominantWeakness = "Application",
+            specialStudyMaterial = "• Mutable vs Immutable: lists and dicts are mutable (modified in-place); strings and tuples are immutable.\n• Scope resolution: LEGB rule (Local -> Enclosing -> Global -> Built-in).\n• Recursion must have a termination condition (base case) and recursive step toward base case.",
+            keyFormulasText = "1. List slicing: list[start:end:step]\n2. Dict safe lookup: dict.get(key, default)\n3. String methods: strip(), split(), join()\n4. Lambda function: lambda x: expression",
+            examTrapsAndTricks = "• Mutable default argument trap: def func(a, lst=[]): lst retains state across calls! Use lst=None.\n• Slicing indices: stop index is ALWAYS exclusive.",
+            halfYearlyWeightage = "8 Marks (Theory + Coding Section)"
         )
     )
 
@@ -861,6 +881,36 @@ object DefaultWellnessData {
                 ExerciseStep("Easy Room Walk & Arm Swings", "Walk slowly around your room or balcony while swinging arms loosely.", 120, "No pressure, just gentle circulation."),
                 ExerciseStep("Seated Cat-Cow & Side Reach", "Sit comfortably and lengthen both sides of your waist.", 120, "Soften your shoulders."),
                 ExerciseStep("Knee-to-Chest & Legs Up Rest", "Lie down and rest your legs up or hug knees gently.", 180, "Rest is productive too.")
+            )
+        ),
+        MovementRoutine(
+            id = "dance_joy_coordination",
+            title = "Dance & Rhythm — 10 Min Joy & Coordination",
+            category = "DANCE",
+            durationMinutes = 10,
+            difficulty = "All Levels",
+            focusTags = "Coordination • Rhythm • Joy • Confidence",
+            description = "An enjoyable way to practice coordination, rhythm, and body confidence. Strictly zero calories, zero weight metrics, just pure musical flow.",
+            steps = listOf(
+                ExerciseStep("Rhythm Bounce & Warm-Up", "Step side to side with natural shoulder bounces. Feel the beat and loosen tension.", 120, "Breathe naturally and smile."),
+                ExerciseStep("Arm Waves & Torso Groove", "Sweep arms overhead and across your body in time with the music.", 180, "Move expressively and comfortably."),
+                ExerciseStep("Step-Touch & Pivot Balance", "Step touch right and left, followed by a gentle pivot. Practising coordination with ease.", 180, "Enjoy the momentum."),
+                ExerciseStep("Free Celebration Dance", "Put on your favorite track and groove however feels natural to you.", 120, "Movement is celebration.")
+            )
+        ),
+        MovementRoutine(
+            id = "meditation_guided_breath",
+            title = "Guided Meditation — 5 Min Grounding & Peace",
+            category = "MEDITATION",
+            durationMinutes = 5,
+            difficulty = "Gentle",
+            focusTags = "Grounding • Peace • 4-4-4 Breath",
+            description = "A gentle 5-minute restorative breath session with an animated breathing visual. Meditation is an invitation, never an obligation.",
+            steps = listOf(
+                ExerciseStep("Grounding & Body Settle", "Sit comfortably with your back supported. Rest your hands in your lap and soften your gaze.", 60, "Feel your feet grounded on the floor."),
+                ExerciseStep("4-4-4 Rhythmic Breathing", "Inhale softly for 4 seconds, hold gently for 4, exhale slowly for 4.", 120, "Smooth, steady, tranquil."),
+                ExerciseStep("Thought Cloud Releasing", "Notice any thoughts like clouds passing across a wide clear sky. You don't have to follow them.", 60, "Let them drift by peacefully."),
+                ExerciseStep("Calm Return & Appreciation", "Gently deepen your breath, wiggle your fingers, and open your eyes with gratitude.", 60, "Carry this calm into your next activity.")
             )
         )
     )

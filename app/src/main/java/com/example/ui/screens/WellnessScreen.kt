@@ -1,9 +1,15 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,634 +23,774 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.NightlightRound
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.DailyHabitEntity
 import com.example.data.DefaultWellnessData
+import com.example.data.HydrationReminderEntity
 import com.example.data.MovementRoutine
 import com.example.data.SkincareStepEntity
 import com.example.data.UserPreferencesEntity
-import com.example.ui.components.CheckListItem
-import com.example.ui.components.HabitCard
-import com.example.ui.components.ProgressCard
-import com.example.ui.components.RoutineCard
-import com.example.ui.components.SectionHeader
+import com.example.ui.components.ClayButton
+import com.example.ui.components.ClayCard
+import com.example.ui.components.ClayIconBadge
+import com.example.ui.components.ClayPill
+import com.example.ui.components.ClayPillButton
+import com.example.ui.theme.ClayCoralAction
+import com.example.ui.theme.ClayDeepPurple
+import com.example.ui.theme.ClayLavenderCard
+import com.example.ui.theme.ClayMintCard
+import com.example.ui.theme.ClayPaleLavenderSurface
+import com.example.ui.theme.ClayPeach
+import com.example.ui.theme.ClayPrimaryLavender
+import com.example.ui.theme.ClayPrimaryText
+import com.example.ui.theme.ClaySecondaryText
+import com.example.ui.theme.ClaySkyBlue
+import com.example.ui.theme.ClaySoftMint
+import com.example.ui.theme.ClayWarmIvory
+import com.example.ui.theme.GentleSuccessGreen
 import com.example.viewmodel.ActiveSubScreen
+import kotlinx.coroutines.delay
 
 @Composable
 fun WellnessScreen(
     preferences: UserPreferencesEntity,
     habits: List<DailyHabitEntity>,
     skincareSteps: List<SkincareStepEntity>,
+    hydrationReminders: List<HydrationReminderEntity> = emptyList(),
     onToggleHabit: (DailyHabitEntity) -> Unit,
     onAddCustomHabit: (String, String, String) -> Unit,
     onStartMovementRoutine: (MovementRoutine) -> Unit,
     onToggleSkincareStep: (SkincareStepEntity) -> Unit,
     onAddSkincareStep: (String, String) -> Unit,
     onDeleteSkincareStep: (Int) -> Unit,
+    onResetTodaysHabits: (() -> Unit)? = null,
     onOpenSubScreen: (ActiveSubScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val subSections = listOf("OVERVIEW", "HOBBIES & JOY", "MINDSET & CONFIDENCE", "FITNESS & MOBILITY", "SELF-CARE / GLOW", "SLEEP & BRAIN DUMP")
-    var selectedSubSection by rememberSaveable { mutableStateOf("OVERVIEW") }
-    var addSkincarePeriod by rememberSaveable { mutableStateOf<String?>(null) }
+    var showMeditationModal by rememberSaveable { mutableStateOf(false) }
+    var showMovementDetailModal by rememberSaveable { mutableStateOf<MovementRoutine?>(null) }
+    var selectedRoutineIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    val completedHabits = habits.count { it.completedToday }
-    val recommendedFitness = when (preferences.currentEnergyLevel) {
-        "LOW" -> DefaultWellnessData.movementRoutines.last()
-        "HIGH" -> DefaultWellnessData.movementRoutines[2]
-        else -> DefaultWellnessData.movementRoutines[1]
-    }
+    val danceRoutine = MovementRoutine(
+        id = "dance_joy_1",
+        title = "Expressive Dance Break",
+        category = "QUICK RESET",
+        durationMinutes = 15,
+        difficulty = "Beginner",
+        focusTags = "Full Body & Joy",
+        description = "Put on your favorite track, feel the rhythm, and shake off exam tension. No choreography rules, just pure joyful expression.",
+        steps = listOf(
+            com.example.data.ExerciseStep("Music choice", "Put on your favorite upbeat song.", 60, "Listen with delight"),
+            com.example.data.ExerciseStep("Warm-up", "Start with gentle shoulder rolls and wrist bounces.", 120, "Inhale calm"),
+            com.example.data.ExerciseStep("Freestyle groove", "Dance across the room, letting all physical tension go.", 600, "Breathe freely"),
+            com.example.data.ExerciseStep("Cool down", "Deep breaths with arms reaching upward, slow exhale.", 120, "Long slow exhale")
+        )
+    )
+
+    val currentRoutines = listOf(
+        danceRoutine,
+        DefaultWellnessData.movementRoutines[0],
+        DefaultWellnessData.movementRoutines[1]
+    )
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .background(ClayWarmIvory)
             .testTag("wellness_screen_list"),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // HEADER
+        // -------------------------------------------------------------
+        // 1. WELCOMING HEADER
+        // -------------------------------------------------------------
         item {
-            Column {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "WELLNESS",
+                    text = "Wellness & Joy",
                     style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground
+                    fontWeight = FontWeight.ExtraBold,
+                    color = ClayPrimaryText
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Feel energetic, healthy, strong, comfortable, confident & well-groomed.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Rest, move, and recharge without guilt or pressure.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = ClaySecondaryText,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
 
-        // SUB-NAVIGATION CHIPS
+        // -------------------------------------------------------------
+        // 2. DANCE (PROMINENT VISUAL CARD)
+        // -------------------------------------------------------------
         item {
-            Row(
+            ClayCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .testTag("wellness_dance_card"),
+                shape = RoundedCornerShape(28.dp),
+                containerColor = Color.White,
+                elevation = 5.dp
             ) {
-                subSections.forEach { sec ->
-                    val isSel = selectedSubSection == sec
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                        ),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable { selectedSubSection = sec }
-                    ) {
-                        Text(
-                            text = sec,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        when (selectedSubSection) {
-            "HOBBIES & JOY" -> {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Actual dance visual banner
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) }
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "🎨 HOBBIES, CREATIVITY & JOY",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = "Drawing, mechanical sketching, watching 1 planned episode of anime, taking an outdoor walk, and family dinners are not things to 'make up for'. They are vital for focus and emotional resilience.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            FilledTonalButton(
-                                onClick = { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Open Hobbies & Joy Manager →")
-                            }
-                        }
-                    }
-                }
-            }
-
-            "MINDSET & CONFIDENCE" -> {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.SetbackRecoverySheet) }
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🛡️", style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Learn Without Losing Self-Respect",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "8-step gentle reframe for low test scores, mistakes, or competition feedback. Diagnostic, not a verdict on your future.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            FilledTonalButton(
-                                onClick = { onOpenSubScreen(ActiveSubScreen.SetbackRecoverySheet) },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Open Reframe Journal")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.ConfidenceLabSheet) }
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🎤", style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Confidence Lab & Speaking Practice",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Word-for-word scripts for doubts in class, 30s project pitches, saying NO politely, and handling tough feedback.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            FilledTonalButton(
-                                onClick = { onOpenSubScreen(ActiveSubScreen.ConfidenceLabSheet) },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Open Situation Playbook")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.FinancialLiteracySheet) }
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("📈", style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Financial Foundations & Student Value",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Value creation principles, high-leverage teen skills, 50/30/20 budgeting calculator, and small earning experiments.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            FilledTonalButton(
-                                onClick = { onOpenSubScreen(ActiveSubScreen.FinancialLiteracySheet) },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Open Wealth & Value")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.AngerOverwhelmPauseSheet) }
-                            .testTag("wellness_anger_pause_card")
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Text(
-                                text = "🕊️ Calm Pause Protocol (Anger & Overwhelm De-escalation)",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "When triggered or defensive: 6-step grounding protocol to pause, separate objective facts from impulses, and respond with poise and dignity.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            FilledTonalButton(
-                                onClick = { onOpenSubScreen(ActiveSubScreen.AngerOverwhelmPauseSheet) },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Open Pause Protocol")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.ConfidenceCheckInSheet) }
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Text(
-                                text = "🌸 Daily Confidence Check-In",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Record how you showed up today — posture, speech, decisions, and quiet self-belief.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
-            "FITNESS & MOBILITY" -> {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(22.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(145.dp)
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Image(
-                                painter = painterResource(id = R.drawable.img_move_banner_1791381874071),
-                                contentDescription = "Personalized fitness illustration",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            Surface(
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .padding(12.dp)
-                            ) {
-                                Text(
-                                    text = "Energy: ${preferences.currentEnergyLevel} • You have ${preferences.dailyTimeCommitmentMinutes} min. Try a ${recommendedFitness.category.lowercase()} session.",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    SectionHeader(
-                        title = "PERSONALIZED FITNESS MODES",
-                        subtitle = "QUICK RESET (5m) • NORMAL (12m) • FULL (20m) • LOW ENERGY (7m)"
-                    )
-                }
-
-                items(DefaultWellnessData.movementRoutines, key = { it.id }) { routine ->
-                    RoutineCard(
-                        routine = routine,
-                        onStartClick = { onStartMovementRoutine(routine) }
-                    )
-                }
-            }
-
-            "SELF-CARE / GLOW" -> {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(22.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
+                            .height(160.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.img_glow_banner_1791381884382),
-                            contentDescription = "Self-care shelf illustration",
+                            painter = painterResource(id = R.drawable.img_move_banner_1791381874071),
+                            contentDescription = "Joyful Dance",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
+                        // Top gradient overlay
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color.Black.copy(alpha = 0.2f),
+                                            Color.Black.copy(alpha = 0.55f)
+                                        )
+                                    )
+                                )
+                        )
+                        // Badge overlay
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = ClayPeach,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "BEGINNER FRIENDLY • PURE JOY",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF8B3A14),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
                     }
-                }
 
-                val morningSteps = skincareSteps.filter { it.period == "MORNING" }
-                val eveningSteps = skincareSteps.filter { it.period == "EVENING" }
-
-                item {
-                    SectionHeader(
-                        title = "MORNING SELF-CARE",
-                        subtitle = "Skin routine, hygiene, grooming, water & posture",
-                        actionText = "+ Step",
-                        onActionClick = { addSkincarePeriod = "MORNING" }
-                    )
-                }
-
-                items(morningSteps, key = { it.id }) { step ->
-                    CheckListItem(
-                        step = step,
-                        onToggle = { onToggleSkincareStep(step) },
-                        onDelete = if (morningSteps.size > 2) ({ onDeleteSkincareStep(step.id) }) else null
-                    )
-                }
-
-                item {
-                    SectionHeader(
-                        title = "EVENING SELF-CARE",
-                        subtitle = "Skincare, teeth, prepare tomorrow & wind-down",
-                        actionText = "+ Step",
-                        onActionClick = { addSkincarePeriod = "EVENING" }
-                    )
-                }
-
-                items(eveningSteps, key = { it.id }) { step ->
-                    CheckListItem(
-                        step = step,
-                        onToggle = { onToggleSkincareStep(step) },
-                        onDelete = if (eveningSteps.size > 2) ({ onDeleteSkincareStep(step.id) }) else null
-                    )
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)),
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.ConfidenceCheckInSheet) }
+                            .padding(20.dp)
                     ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "🌸 Confidence Check: \"How did you show up today?\"",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                text = "Joyful Dance Break",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Confidence comes from consistency, skills, health, grooming, posture, achievements, and self-respect.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-            }
-
-            "SLEEP & BRAIN DUMP" -> {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(22.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text(
-                                text = "CALM EVENING FLOW (${preferences.windDownTime} → ${preferences.targetBedtime})",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "LIGHT REVISION  →  PLAN TOMORROW  →  BRAIN DUMP  →  HYGIENE  →  WIND-DOWN  →  SLEEP",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = ClayPaleLavenderSurface
                             ) {
-                                Button(
-                                    onClick = { onOpenSubScreen(ActiveSubScreen.BrainDumpSheet) },
-                                    shape = RoundedCornerShape(14.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("🧠 Empty Your Head")
-                                }
-                                OutlinedButton(
-                                    onClick = { onOpenSubScreen(ActiveSubScreen.SleepSheet) },
-                                    shape = RoundedCornerShape(14.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("🌙 Sleep Schedule")
-                                }
+                                Text(
+                                    text = "15 min",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClayDeepPurple,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Release mental fatigue and refresh your focus through carefree movement.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ClaySecondaryText
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ClayPillButton(
+                            text = "Start dancing",
+                            icon = Icons.Default.MusicNote,
+                            onClick = {
+                                onStartMovementRoutine(danceRoutine)
+                            },
+                            containerColor = ClayCoralAction,
+                            height = 46.dp,
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "start_dance_button"
+                        )
                     }
                 }
             }
+        }
 
-            else -> {
-                // OVERVIEW
-                item {
-                    ProgressCard(
-                        completedCount = completedHabits,
-                        totalCount = habits.size,
-                        supportiveQuote = "You have ${preferences.dailyTimeCommitmentMinutes} minutes. Try a ${recommendedFitness.category.lowercase()} movement session.",
-                        onViewDailyRoutineClick = { onOpenSubScreen(ActiveSubScreen.DailyRoutineGeneratorSheet) }
-                    )
-                }
-
-                // Quick Wellness Modules Row
-                item {
+        // -------------------------------------------------------------
+        // 3. MOVEMENT & MOBILITY (Visual preview & step-by-step)
+        // -------------------------------------------------------------
+        item {
+            ClayCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FilledTonalButton(
-                            onClick = { onOpenSubScreen(ActiveSubScreen.BrainDumpSheet) },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.weight(1f)
+                        Text(
+                            text = "Gentle Movement",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ClayPrimaryText
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = ClaySoftMint
                         ) {
-                            Text("🧠 Brain Dump")
+                            Text(
+                                text = "Restorative",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF285E3D),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
                         }
-                        FilledTonalButton(
-                            onClick = { onOpenSubScreen(ActiveSubScreen.HydrationSheet) },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.weight(1f)
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Physical resets designed to release neck, spine, and eye strain after study.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    DefaultWellnessData.movementRoutines.take(2).forEach { routine ->
+                        Surface(
+                            onClick = { showMovementDetailModal = routine },
+                            shape = RoundedCornerShape(18.dp),
+                            color = ClayPaleLavenderSurface.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
                         ) {
-                            Text("💧 Hydration")
-                        }
-                        FilledTonalButton(
-                            onClick = { onOpenSubScreen(ActiveSubScreen.ConfidenceCheckInSheet) },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("🌸 Check-In")
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    ClayIconBadge(
+                                        icon = Icons.Default.SelfImprovement,
+                                        containerColor = Color.White,
+                                        iconColor = ClayDeepPurple,
+                                        size = 38.dp,
+                                        iconSize = 20.dp
+                                    )
+                                    Column {
+                                        Text(
+                                            text = routine.title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = ClayPrimaryText
+                                        )
+                                        Text(
+                                            text = "${routine.durationMinutes} min • ${routine.focusTags}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = ClaySecondaryText
+                                        )
+                                    }
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = ClaySecondaryText
+                                )
+                            }
                         }
                     }
                 }
+            }
+        }
 
-                // Recommended Fitness Card
-                item {
-                    SectionHeader(
-                        title = "RECOMMENDED FOR YOUR ENERGY (${preferences.currentEnergyLevel})",
-                        actionText = "All Modes",
-                        onActionClick = { selectedSubSection = "FITNESS & MOBILITY" }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    RoutineCard(
-                        routine = recommendedFitness,
-                        onStartClick = { onStartMovementRoutine(recommendedFitness) }
-                    )
-                }
-
-                // Daily Wellness Habits
-                item {
-                    SectionHeader(
-                        title = "DAILY WELLNESS TRACKER",
-                        subtitle = "Sleep • Hydration • Movement • Meals • Skincare • Posture • Mood"
-                    )
-                }
-
-                items(habits, key = { it.id }) { habit ->
-                    HabitCard(
-                        habit = habit,
-                        onCardClick = {
-                            when (habit.category) {
-                                "HYDRATE" -> onOpenSubScreen(ActiveSubScreen.HydrationSheet)
-                                "MOVE" -> selectedSubSection = "FITNESS & MOBILITY"
-                                "GLOW" -> selectedSubSection = "SELF-CARE / GLOW"
-                                "SLEEP" -> onOpenSubScreen(ActiveSubScreen.SleepSheet)
-                                "CONFIDENCE" -> onOpenSubScreen(ActiveSubScreen.ConfidenceCheckInSheet)
-                                "POSTURE" -> onOpenSubScreen(ActiveSubScreen.StudyResetSheet)
-                                else -> onToggleHabit(habit)
+        // -------------------------------------------------------------
+        // 4. MEDITATION & BREATH (Calming card with gentle visual focus)
+        // -------------------------------------------------------------
+        item {
+            ClayCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("wellness_meditation_card"),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            ClayIconBadge(
+                                icon = Icons.Default.Spa,
+                                containerColor = ClaySoftMint,
+                                iconColor = Color(0xFF285E3D),
+                                size = 40.dp,
+                                iconSize = 22.dp
+                            )
+                            Column {
+                                Text(
+                                    text = "Quiet Space Meditation",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClayPrimaryText
+                                )
+                                Text(
+                                    text = "Gentle breathing & presence",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ClaySecondaryText
+                                )
                             }
-                        },
-                        onToggleComplete = { onToggleHabit(habit) }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = ClaySkyBlue
+                        ) {
+                            Text(
+                                text = "5 min",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF38658D),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = "Sit comfortably, let your shoulders drop, and follow the soothing rhythm.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ClayButton(
+                        text = "Open breathing space",
+                        icon = Icons.Default.SelfImprovement,
+                        onClick = { showMeditationModal = true },
+                        containerColor = Color(0xFF7FA892),
+                        contentColor = Color.White,
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "open_meditation_button"
                     )
                 }
             }
         }
 
+        // -------------------------------------------------------------
+        // 5. CREATIVE TIME & RELAXING HOBBIES
+        // -------------------------------------------------------------
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            ClayCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            ClayIconBadge(
+                                icon = Icons.Default.Brush,
+                                containerColor = ClayPeach,
+                                iconColor = Color(0xFF9A4518),
+                                size = 40.dp,
+                                iconSize = 22.dp
+                            )
+                            Column {
+                                Text(
+                                    text = "Creative Time & Joy",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClayPrimaryText
+                                )
+                                Text(
+                                    text = "Drawing, music & offline joy",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ClaySecondaryText
+                                )
+                            }
+                        }
+
+                        TextButton(onClick = { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) }) {
+                            Text("Explore", color = ClayDeepPurple, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Not everything in life has to be about productivity. Carve out guilt-free time for your sketchbook, reading, or family talks.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("Drawing", "Music", "Journaling", "Stargazing").forEach { hobbyTag ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = ClayPaleLavenderSurface.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = hobbyTag,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = ClayPrimaryText
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 6. GENTLE SELF-CARE (NO APPEARANCE / WEIGHT / METRIC SCORING)
+        // -------------------------------------------------------------
+        item {
+            ClayCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 3.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Text(
+                        text = "Evening Rest & Gentle Reset",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ClayPrimaryText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Wind down comfortably so your mind rests peacefully tonight.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    skincareSteps.take(3).forEach { step ->
+                        Surface(
+                            onClick = { onToggleSkincareStep(step) },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (step.completedToday) ClaySoftMint.copy(alpha = 0.4f) else ClayPaleLavenderSurface.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (step.completedToday) Icons.Default.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                                    contentDescription = null,
+                                    tint = if (step.completedToday) GentleSuccessGreen else ClaySecondaryText,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = step.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = ClayPrimaryText,
+                                    textDecoration = if (step.completedToday) TextDecoration.LineThrough else TextDecoration.None
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    if (addSkincarePeriod != null) {
-        var stepTitle by rememberSaveable { mutableStateOf("") }
+    // -----------------------------------------------------------------
+    // DIALOG: MEDITATION & BREATHING SPACE
+    // -----------------------------------------------------------------
+    if (showMeditationModal) {
+        val infiniteTransition = rememberInfiniteTransition(label = "breathe")
+        val breathScale by infiniteTransition.animateFloat(
+            initialValue = 0.82f,
+            targetValue = 1.15f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "breath_scale"
+        )
+
+        var meditationSecondsLeft by rememberSaveable { mutableIntStateOf(180) }
+
+        LaunchedEffect(meditationSecondsLeft) {
+            if (meditationSecondsLeft > 0) {
+                delay(1000L)
+                meditationSecondsLeft -= 1
+            }
+        }
+
         AlertDialog(
-            onDismissRequest = { addSkincarePeriod = null },
-            title = { Text("Add ${addSkincarePeriod?.lowercase()?.replaceFirstChar { it.uppercase() }} Step") },
+            onDismissRequest = { showMeditationModal = false },
+            title = {
+                Text(
+                    text = "Breathing Sanctuary",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = ClayPrimaryText
+                )
+            },
             text = {
-                OutlinedTextField(
-                    value = stepTitle,
-                    onValueChange = { stepTitle = it },
-                    label = { Text("Step name") },
-                    singleLine = true,
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Inhale calmly... exhale gently.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+
+                    // Animated Breathing Visual Circle
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .padding(10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = ClaySoftMint.copy(alpha = 0.5f),
+                            border = BorderStroke(2.dp, ClaySoftMint),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .scale(breathScale)
+                        ) {}
+
+                        Surface(
+                            shape = CircleShape,
+                            color = ClayPaleLavenderSurface,
+                            shadowElevation = 4.dp,
+                            modifier = Modifier.size(80.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "${meditationSecondsLeft / 60}:${"%02d".format(meditationSecondsLeft % 60)}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClayDeepPurple
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "There is nothing you need to accomplish in this moment.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ClaySecondaryText
+                    )
+                }
+            },
+            confirmButton = {
+                ClayButton(
+                    text = "Done & Refreshed",
+                    onClick = { showMeditationModal = false },
                     modifier = Modifier.fillMaxWidth()
                 )
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (stepTitle.isNotBlank()) {
-                            onAddSkincareStep(addSkincarePeriod!!, stepTitle)
-                            addSkincarePeriod = null
-                        }
-                    }
-                ) {
-                    Text("Add")
+            dismissButton = {
+                TextButton(onClick = { showMeditationModal = false }) {
+                    Text("Skip session", color = ClaySecondaryText)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { addSkincarePeriod = null }) {
-                    Text("Cancel")
+            shape = RoundedCornerShape(26.dp),
+            containerColor = Color.White
+        )
+    }
+
+    // -----------------------------------------------------------------
+    // DIALOG: MOVEMENT STEP-BY-STEP DETAIL
+    // -----------------------------------------------------------------
+    showMovementDetailModal?.let { routine ->
+        AlertDialog(
+            onDismissRequest = { showMovementDetailModal = null },
+            title = {
+                Text(
+                    text = routine.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = routine.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Step-by-step guidance:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ClayPrimaryText
+                    )
+                    routine.steps.forEachIndexed { idx, step ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = "${idx + 1}.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayDeepPurple
+                            )
+                            Text(
+                                text = "${step.name}: ${step.instruction}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ClayPrimaryText
+                            )
+                        }
+                    }
                 }
-            }
+            },
+            confirmButton = {
+                ClayButton(
+                    text = "Start Routine (${routine.durationMinutes}m)",
+                    onClick = {
+                        val toStart = routine
+                        showMovementDetailModal = null
+                        onStartMovementRoutine(toStart)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showMovementDetailModal = null }) {
+                    Text("Close")
+                }
+            },
+            shape = RoundedCornerShape(26.dp),
+            containerColor = Color.White
         )
     }
 }

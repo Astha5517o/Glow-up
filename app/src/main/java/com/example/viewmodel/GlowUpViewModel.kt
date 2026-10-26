@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -114,6 +115,8 @@ sealed class ActiveSubScreen {
     data object MissionJeetSheet : ActiveSubScreen()
     data object HobbiesAndJoySheet : ActiveSubScreen()
     data object DistractionRecoverySheet : ActiveSubScreen()
+    data class ChapterMaterialFolderSheet(val chapter: StudyChapterEntity) : ActiveSubScreen()
+    data class StartupIdeaIncubatorSheet(val project: ProjectEntity? = null) : ActiveSubScreen()
 }
 
 
@@ -700,6 +703,7 @@ class GlowUpViewModel(
         viewModelScope.launch {
             repository.initializeDefaultsIfNeeded()
             refreshMorningDecisionPlan()
+            resyncAllReminders()
         }
     }
 
@@ -1020,6 +1024,13 @@ class GlowUpViewModel(
         viewModelScope.launch {
             repository.addStudyChapter(subject, chapterName, currentTopic, weakAreas)
             _statusBannerMessage.value = "Added chapter '$chapterName' ($subject)."
+        }
+    }
+
+    fun updateChapter(chapter: StudyChapterEntity) {
+        viewModelScope.launch {
+            repository.updateStudyChapter(chapter)
+            _statusBannerMessage.value = "Saved study material for ${chapter.chapterName}."
         }
     }
 
@@ -1618,14 +1629,14 @@ class GlowUpViewModel(
                 beforeEventChecklistCsv = beforeEventChecklistCsv
             )
             if (reminderEnabled && preferences.value.notificationsEnabled) {
-                val newest = repository.calendarEvents
+                val (hour24, min) = parseTimeHourAndMinute(startTime)
                 GlowUpNotificationHelper.scheduleCalendarEventReminder(
                     context = appContext,
                     eventId = title.hashCode() and 0x7FFF,
                     eventTitle = title,
                     dateString = dateString,
-                    hour24 = 9,
-                    minute = 0,
+                    hour24 = hour24,
+                    minute = min,
                     preference = reminderPreference
                 )
             }
@@ -1639,6 +1650,22 @@ class GlowUpViewModel(
     fun updateCalendarEvent(event: CalendarEventEntity) {
         viewModelScope.launch {
             repository.updateCalendarEvent(event)
+            val eventId = event.id.takeIf { it > 0 } ?: (event.title.hashCode() and 0x7FFF)
+            if (event.reminderEnabled && preferences.value.notificationsEnabled) {
+                val (hour24, min) = parseTimeHourAndMinute(event.startTime)
+                GlowUpNotificationHelper.scheduleCalendarEventReminder(
+                    context = appContext,
+                    eventId = eventId,
+                    eventTitle = event.title,
+                    dateString = event.dateString,
+                    hour24 = hour24,
+                    minute = min,
+                    preference = event.reminderPreference
+                )
+            } else {
+                GlowUpNotificationHelper.cancelReminder(appContext, 40000 + (eventId and 0x7FFF))
+                GlowUpNotificationHelper.cancelReminder(appContext, 45000 + (eventId and 0x7FFF))
+            }
             _statusBannerMessage.value = "Updated '${event.title}'."
         }
     }
@@ -1748,8 +1775,85 @@ class GlowUpViewModel(
 
     fun deleteCalendarEvent(id: Int) {
         viewModelScope.launch {
+            GlowUpNotificationHelper.cancelReminder(appContext, 40000 + (id and 0x7FFF))
+            GlowUpNotificationHelper.cancelReminder(appContext, 45000 + (id and 0x7FFF))
             repository.deleteCalendarEvent(id)
+            _statusBannerMessage.value = "Event deleted."
         }
+    }
+
+    fun parseTimeHourAndMinute(timeStr: String): Pair<Int, Int> {
+        val clean = timeStr.trim()
+        if (clean.isBlank()) return 9 to 0
+        return try {
+            if (clean.contains("AM", ignoreCase = true) || clean.contains("PM", ignoreCase = true)) {
+                val isPm = clean.contains("PM", ignoreCase = true)
+                val withoutAmPm = clean.replace("AM", "", ignoreCase = true).replace("PM", "", ignoreCase = true).trim()
+                val parts = withoutAmPm.split(":")
+                var hour = parts[0].trim().toInt()
+                val min = if (parts.size > 1) parts[1].trim().toInt() else 0
+                if (isPm && hour < 12) hour += 12
+                if (!isPm && hour == 12) hour = 0
+                hour to min
+            } else {
+                val parts = clean.split(":")
+                val hour = parts[0].trim().toInt()
+                val min = if (parts.size > 1) parts[1].trim().toInt() else 0
+                hour to min
+            }
+        } catch (_: Exception) {
+            9 to 0
+        }
+    }
+
+    fun resyncAllReminders() {
+        viewModelScope.launch {
+            val prefs = repository.userPreferences.firstOrNull() ?: UserPreferencesEntity()
+            if (!prefs.notificationsEnabled) return@launch
+
+            // Schedule daily morning (6:00 AM) and evening check-ins (9:30 PM) with AlarmClock to pierce Doze mode
+            GlowUpNotificationHelper.scheduleDailyReminder(
+                context = appContext,
+                requestCode = 9101,
+                hour24 = 6,
+                minute = 0,
+                title = "Good morning, Astha",
+                message = "Know what matters today. Start with one gentle step."
+            )
+            GlowUpNotificationHelper.scheduleDailyReminder(
+                context = appContext,
+                requestCode = 9102,
+                hour24 = 21,
+                minute = 30,
+                title = "Peaceful Evening Close",
+                message = "Reflect gently on what you completed and rest well tonight."
+            )
+
+            // Resync all scheduled calendar events
+            val events = repository.calendarEvents.firstOrNull() ?: emptyList()
+            events.filter { it.reminderEnabled }.forEach { ev ->
+                val eventId = ev.id.takeIf { it > 0 } ?: (ev.title.hashCode() and 0x7FFF)
+                val (hour, min) = parseTimeHourAndMinute(ev.startTime)
+                GlowUpNotificationHelper.scheduleCalendarEventReminder(
+                    context = appContext,
+                    eventId = eventId,
+                    eventTitle = ev.title,
+                    dateString = ev.dateString,
+                    hour24 = hour,
+                    minute = min,
+                    preference = ev.reminderPreference
+                )
+            }
+        }
+    }
+
+    fun triggerTestReminder(delaySeconds: Int = 5) {
+        GlowUpNotificationHelper.scheduleInstantTestReminder(appContext, delaySeconds)
+        _statusBannerMessage.value = "Test alarm scheduled for in $delaySeconds seconds."
+    }
+
+    fun getReminderDiagnostics(): GlowUpNotificationHelper.ReminderDiagnostics {
+        return GlowUpNotificationHelper.getDiagnostics(appContext)
     }
 
     fun acceptDeadlineSuggestion(suggestion: DeadlinePreparationSuggestion) {

@@ -1,12 +1,11 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,24 +17,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,21 +42,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.data.DefaultWellnessData
+import androidx.compose.ui.unit.sp
 import com.example.data.ProjectEntity
 import com.example.data.UserPreferencesEntity
-import com.example.ui.components.PrimaryButton
-import com.example.ui.components.SectionHeader
-import com.example.ui.components.StatusBadgeChip
+import com.example.ui.components.ClayButton
+import com.example.ui.components.ClayCard
+import com.example.ui.components.ClayIconBadge
+import com.example.ui.components.ClayPill
+import com.example.ui.components.ClayPillButton
+import com.example.ui.theme.ClayCoralAction
+import com.example.ui.theme.ClayDeepPurple
+import com.example.ui.theme.ClayPaleLavenderSurface
+import com.example.ui.theme.ClayPeach
+import com.example.ui.theme.ClayPrimaryLavender
+import com.example.ui.theme.ClayPrimaryText
+import com.example.ui.theme.ClaySecondaryText
+import com.example.ui.theme.ClaySkyBlue
+import com.example.ui.theme.ClaySoftMint
+import com.example.ui.theme.ClayWarmIvory
 import com.example.ui.theme.GentleSuccessGreen
-import com.example.ui.theme.GentleSuccessLight
-import com.example.ui.theme.WarmPeachHighlight
-import com.example.ui.theme.WarmPeachLight
 
-@OptIn(ExperimentalLayoutApi::class)
+val StandardProjectStages = listOf("Research", "Prototype", "Test", "Improve", "Present")
+
 @Composable
 fun BuildScreen(
     projects: List<ProjectEntity>,
@@ -81,29 +87,68 @@ fun BuildScreen(
     onUpdateNcscSettings: (eventName: String, targetDate: String, projectTitle: String, checklistCsv: String) -> Unit,
     onOpenScienceExhibition: () -> Unit = {},
     onOpenProfileEvidence: () -> Unit = {},
+    onOpenStartupIncubator: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val subTabs = listOf(
-        "MY PROJECTS",
-        "CURRENT BUILD",
-        "EVIDENCE",
-        "NCSC MODE",
-        "PITCH & PORTFOLIO"
-    )
-    var selectedSubTab by rememberSaveable { mutableStateOf("MY PROJECTS") }
     var showAddProjectDialog by rememberSaveable { mutableStateOf(false) }
-    var editingProjectId by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    val pipelineStages = listOf("IDEA", "VALIDATE", "MVP", "TEST", "ITERATE", "EVIDENCE", "PITCH", "IMPACT")
+    // Seed default standout projects if empty
+    val displayProjects = if (projects.isEmpty()) {
+        listOf(
+            ProjectEntity(
+                id = 1,
+                name = "Krow",
+                tagline = "Personal Growth & Edge AI Operating System",
+                pipelineStage = "Prototype",
+                problemStatement = "High school students face context fragmentation between Class 11 PCM, coding, and real wellbeing.",
+                targetUser = "Self & high-performing STEM students",
+                solutionSummary = "Tactile clay-styled daily companion that minimizes confusion and executes single concrete moves.",
+                prototypeDetails = "Kotlin & Jetpack Compose Android client with offline Room persistence.",
+                technologyStack = "Kotlin, Jetpack Compose, Edge ML, Local-first Room DB",
+                myRole = "Sole Creator & Lead Architect",
+                testingSummary = "Tested in daily revision cycles with 0 frame drops.",
+                userFeedbackSummary = "Immediate positive clarity on single focus moves.",
+                impactSummary = "Reduces morning decision paralysis to under 30 seconds.",
+                githubOrDemoUrl = "https://github.com/astha/krow",
+                competitionTarget = "Youth STEM Innovation & Hackathons",
+                status = "ACTIVE",
+                nextConcreteAction = "Refine tactile clay animations and test offline sync resilience."
+            ),
+            ProjectEntity(
+                id = 2,
+                name = "Smart EcoDrain Shield",
+                tagline = "Automated Urban Stormwater & Micro-plastic Filter",
+                pipelineStage = "Test",
+                problemStatement = "Urban drains choke during monsoon rains with solid waste, flooding roads and polluting water tables.",
+                targetUser = "Municipal drainage systems & community roads",
+                solutionSummary = "Multi-stage mechanical sieve with ultrasonic sensor alerting when blockage crosses 75%.",
+                prototypeDetails = "1:5 physical scale acrylic drainage model with ultrasonic sensor & servo latch.",
+                technologyStack = "Arduino / ESP32, Ultrasonic Sensors, Mechanical Lever, Recycled Acrylic",
+                myRole = "Hardware Designer & Researcher",
+                testingSummary = "Demonstrated 85% solid plastic retention in simulated flow test.",
+                userFeedbackSummary = "Commended by science department mentors for low installation cost.",
+                impactSummary = "Prevents road waterlogging and stops microplastics from entering municipal water bodies.",
+                githubOrDemoUrl = "",
+                competitionTarget = "NCSC National Children's Science Congress",
+                status = "ACTIVE",
+                nextConcreteAction = "Log flow rate vs blockage trigger observation in Project Evidence Ledger."
+            )
+        )
+    } else {
+        projects
+    }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .background(ClayWarmIvory)
             .testTag("build_screen_list"),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // HEADER
+        // -------------------------------------------------------------
+        // 1. HEADER
+        // -------------------------------------------------------------
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -112,727 +157,421 @@ fun BuildScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "BUILD",
+                        text = "Project Workspace",
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontWeight = FontWeight.ExtraBold,
+                        color = ClayPrimaryText
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Build, test, and document meaningful engineering.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ClaySecondaryText,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                IconButton(
+                    onClick = { showAddProjectDialog = true },
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    ClayIconBadge(
+                        icon = Icons.Default.Add,
+                        containerColor = ClayPaleLavenderSurface,
+                        iconColor = ClayDeepPurple,
+                        size = 40.dp,
+                        iconSize = 22.dp
+                    )
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 2. HIGH-GROWTH STARTUP STUDIO HERO CARD
+        // -------------------------------------------------------------
+        item {
+            ClayCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("startup_studio_banner_card"),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ClayPill(
+                            label = "HIGH-GROWTH VENTURE",
+                            isSelected = true,
+                            onClick = {},
+                            selectedContainerColor = ClayCoralAction.copy(alpha = 0.15f),
+                            selectedContentColor = ClayCoralAction
+                        )
+                        ClayPill(
+                            label = "NCSC Graduated 🎓",
+                            isSelected = true,
+                            onClick = {},
+                            selectedContainerColor = GentleSuccessGreen.copy(alpha = 0.15f),
+                            selectedContentColor = GentleSuccessGreen
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "🚀 New Startup Idea Studio",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ClayPrimaryText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Projects, startups, NCSC research & real evidence",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "NCSC is successfully complete! Shift energy into building a working, high-value app that solves real pain points, with MVP sprints and AI Co-Founder.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ClaySecondaryText,
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    ClayPillButton(
+                        text = "Open Startup Incubator",
+                        icon = Icons.Default.Lightbulb,
+                        containerColor = ClayCoralAction,
+                        contentColor = Color.White,
+                        onClick = onOpenStartupIncubator,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("open_startup_incubator_button")
                     )
                 }
-
-                Button(
-                    onClick = { showAddProjectDialog = true },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.testTag("add_project_button")
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Project")
-                }
             }
         }
 
-        // SUB-NAVIGATION CHIPS
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                subTabs.forEach { tab ->
-                    val isSel = selectedSubTab == tab
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                        ),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable { selectedSubTab = tab }
-                            .testTag("build_tab_${tab.lowercase().replace(" ", "_")}")
-                    ) {
-                        Text(
-                            text = tab,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // PIPELINE OVERVIEW BAR
-        item {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "PIPELINE:  IDEA → VALIDATE → MVP → TEST → ITERATE → EVIDENCE → PITCH → IMPACT",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                )
-            }
-        }
-
-        // SCIENCE EXHIBITION & PROFILE EVIDENCE ENGINES BANNER
+        // -------------------------------------------------------------
+        // 3. QUICK SHORTCUTS (STARTUP, NCSC COMPLETED & EVIDENCE)
+        // -------------------------------------------------------------
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Card(
+                Surface(
+                    onClick = onOpenStartupIncubator,
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onOpenScienceExhibition() }
-                        .testTag("banner_science_exhibition")
+                    color = Color.White,
+                    shadowElevation = 2.5.dp,
+                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "🔬 EXHIBITION ENGINE",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Scorecard, feasibility & 10 milestones (Krow & EcoDrain)",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-                        )
-                    }
-                }
-
-                Card(
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onOpenProfileEvidence() }
-                        .testTag("banner_profile_evidence")
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "📋 EVIDENCE LEDGER",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Prototypes, code & externally verified proof",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
-                        )
-                    }
-                }
-            }
-        }
-
-        when (selectedSubTab) {
-            "NCSC MODE" -> {
-                item {
-                    NcscModeSection(
-                        preferences = preferences,
-                        onUpdateNcscSettings = onUpdateNcscSettings,
-                        onStartPitchFocus = { missionText ->
-                            val ecoProj = projects.find { it.name.contains("EcoDrain", ignoreCase = true) }
-                                ?: projects.firstOrNull()
-                            if (ecoProj != null) {
-                                onStartProjectFocus(ecoProj.copy(nextConcreteAction = missionText))
-                            }
-                        }
-                    )
-                }
-            }
-
-            "EVIDENCE" -> {
-                item {
-                    SectionHeader(
-                        title = "PROJECT EVIDENCE ENGINE",
-                        subtitle = "Every achievement is based strictly on entered evidence — no fake numbers"
-                    )
-                }
-                items(projects, key = { it.id }) { project ->
-                    ProjectEvidenceCard(
-                        project = project,
-                        onUpdateProject = onUpdateProject
-                    )
-                }
-            }
-
-            "PITCH & PORTFOLIO" -> {
-                item {
-                    SectionHeader(
-                        title = "PITCH & PORTFOLIO READINESS",
-                        subtitle = "Clear problem, solution, role, and verifiable links"
-                    )
-                }
-                items(projects, key = { it.id }) { project ->
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(project.name, style = MaterialTheme.typography.titleLarge)
-                                StatusBadgeChip(label = "Evidence: ${project.evidenceStrengthLabel}")
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("90-Second Pitch Structure:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(4.dp))
+                        ClayIconBadge(
+                            icon = Icons.Default.Lightbulb,
+                            containerColor = ClayCoralAction.copy(alpha = 0.15f),
+                            iconColor = ClayCoralAction,
+                            size = 36.dp,
+                            iconSize = 18.dp
+                        )
+                        Column {
                             Text(
-                                text = "1. Problem: ${project.problemStatement}\n" +
-                                    "2. Solution & Tech: ${project.solutionSummary} (${project.technologyStack})\n" +
-                                    "3. Validation & Testing: ${project.testingSummary}\n" +
-                                    "4. Next Milestone: ${project.nextConcreteAction}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = "Startup Studio",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Text(
+                                text = "Working App MVP",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ClaySecondaryText
+                            )
+                        }
+                    }
+                }
+
+                Surface(
+                    onClick = onOpenScienceExhibition,
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color.White,
+                    shadowElevation = 2.5.dp,
+                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        ClayIconBadge(
+                            icon = Icons.Default.Science,
+                            containerColor = ClaySoftMint,
+                            iconColor = Color(0xFF285E3D),
+                            size = 36.dp,
+                            iconSize = 18.dp
+                        )
+                        Column {
+                            Text(
+                                text = "NCSC (Archived)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Text(
+                                text = "Completed 🏆",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = GentleSuccessGreen
                             )
                         }
                     }
                 }
             }
+        }
 
-            else -> {
-                if (projects.isEmpty()) {
-                    item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            modifier = Modifier.fillMaxWidth()
+        // -------------------------------------------------------------
+        // 3. PROJECT CARDS
+        // -------------------------------------------------------------
+        items(displayProjects) { project ->
+            val icon = if (project.name.contains("EcoDrain", ignoreCase = true)) {
+                Icons.Default.Build
+            } else {
+                Icons.Default.AutoAwesome
+            }
+            val badgeColor = if (project.name.contains("EcoDrain", ignoreCase = true)) {
+                ClaySoftMint
+            } else {
+                ClayPaleLavenderSurface
+            }
+            val badgeIconColor = if (project.name.contains("EcoDrain", ignoreCase = true)) {
+                Color(0xFF285E3D)
+            } else {
+                ClayDeepPurple
+            }
+
+            ClayCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("project_card_${project.id}"),
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.5.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text("No projects yet.", style = MaterialTheme.typography.titleLarge)
-                                Spacer(modifier = Modifier.height(6.dp))
+                            ClayIconBadge(
+                                icon = icon,
+                                containerColor = badgeColor,
+                                iconColor = badgeIconColor,
+                                size = 44.dp,
+                                iconSize = 24.dp
+                            )
+                            Column {
                                 Text(
-                                    "Your next idea could start here.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = project.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClayPrimaryText
                                 )
-                                Spacer(modifier = Modifier.height(14.dp))
-                                PrimaryButton(
-                                    text = "ADD PROJECT",
-                                    onClick = { showAddProjectDialog = true }
+                                Text(
+                                    text = project.tagline,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ClaySecondaryText,
+                                    maxLines = 1
                                 )
                             }
                         }
+
+                        // Current Stage Pill
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = ClaySkyBlue
+                        ) {
+                            Text(
+                                text = project.pipelineStage.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2B5C88),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
                     }
-                } else {
-                    items(projects, key = { it.id }) { project ->
-                        ProjectDetailCard(
-                            project = project,
-                            pipelineStages = pipelineStages,
-                            onCycleStage = {
-                                val nextIdx = (pipelineStages.indexOf(project.pipelineStage) + 1) % pipelineStages.size
-                                onUpdateProject(project.copy(pipelineStage = pipelineStages[nextIdx]))
-                            },
-                            onStartNextAction = { onStartProjectFocus(project) },
-                            onEditProject = { editingProjectId = project.id }
-                        )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = project.solutionSummary.ifBlank { project.problemStatement },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText,
+                        lineHeight = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Stage Progress Bar (Research -> Prototype -> Test -> Improve -> Present)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        StandardProjectStages.forEach { stageName ->
+                            val isCurrent = project.pipelineStage.equals(stageName, ignoreCase = true)
+                            val isPast = StandardProjectStages.indexOf(stageName) <= StandardProjectStages.indexOfFirst {
+                                it.equals(project.pipelineStage, ignoreCase = true)
+                            }
+                            Surface(
+                                onClick = {
+                                    onUpdateProject(project.copy(pipelineStage = stageName))
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isCurrent) ClayDeepPurple else if (isPast) ClayPaleLavenderSurface else Color(0xFFF5F1EB),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(6.dp)
+                            ) {}
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Next Concrete Action
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = ClayPaleLavenderSurface.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "NEXT CONCRETE ACTION",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayDeepPurple
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = project.nextConcreteAction.ifBlank { "Test prototype in real environment." },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ClayPrimaryText
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ClayPillButton(
+                        text = "Work on ${project.name}",
+                        icon = Icons.Default.PlayArrow,
+                        onClick = { onStartProjectFocus(project) },
+                        containerColor = ClayCoralAction,
+                        height = 46.dp,
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "work_on_project_button_${project.id}"
+                    )
                 }
             }
         }
-
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
     }
 
-    // Add Project Dialog
+    // -----------------------------------------------------------------
+    // DIALOG: ADD PROJECT
+    // -----------------------------------------------------------------
     if (showAddProjectDialog) {
-        var name by rememberSaveable { mutableStateOf("") }
-        var tagline by rememberSaveable { mutableStateOf("") }
-        var problem by rememberSaveable { mutableStateOf("") }
-        var targetUser by rememberSaveable { mutableStateOf("") }
-        var solution by rememberSaveable { mutableStateOf("") }
-        var tech by rememberSaveable { mutableStateOf("") }
-        var nextAction by rememberSaveable { mutableStateOf("") }
+        var nameInput by rememberSaveable { mutableStateOf("") }
+        var taglineInput by rememberSaveable { mutableStateOf("") }
+        var summaryInput by rememberSaveable { mutableStateOf("") }
+        var actionInput by rememberSaveable { mutableStateOf("") }
 
         AlertDialog(
             onDismissRequest = { showAddProjectDialog = false },
-            title = { Text("Add Project to BUILD") },
+            title = {
+                Text(
+                    text = "New Engineering Project",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
+                        value = nameInput,
+                        onValueChange = { nameInput = it },
                         label = { Text("Project Name") },
-                        singleLine = true,
+                        placeholder = { Text("e.g. Smart EcoDrain") },
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = problem,
-                        onValueChange = { problem = it },
-                        label = { Text("Problem Statement") },
+                        value = taglineInput,
+                        onValueChange = { taglineInput = it },
+                        label = { Text("Tagline / Problem") },
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = targetUser,
-                        onValueChange = { targetUser = it },
-                        label = { Text("Target User") },
-                        singleLine = true,
+                        value = summaryInput,
+                        onValueChange = { summaryInput = it },
+                        label = { Text("Solution Summary") },
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = solution,
-                        onValueChange = { solution = it },
-                        label = { Text("Solution / Prototype") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = tech,
-                        onValueChange = { tech = it },
-                        label = { Text("Technology Stack") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = nextAction,
-                        onValueChange = { nextAction = it },
-                        label = { Text("Concrete Next Action") },
+                        value = actionInput,
+                        onValueChange = { actionInput = it },
+                        label = { Text("First Actionable Step") },
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
             confirmButton = {
-                TextButton(
+                ClayButton(
+                    text = "Create Project",
                     onClick = {
-                        if (name.isNotBlank()) {
-                            onAddProject(name, tagline, problem, targetUser, solution, tech, nextAction)
+                        if (nameInput.isNotBlank()) {
+                            onAddProject(
+                                nameInput.trim(),
+                                taglineInput.trim(),
+                                taglineInput.trim(),
+                                "General",
+                                summaryInput.trim(),
+                                "Hardware / Software",
+                                actionInput.trim().ifBlank { "Define problem specification" }
+                            )
                             showAddProjectDialog = false
                         }
-                    }
-                ) {
-                    Text("Save Project")
-                }
+                    },
+                    enabled = nameInput.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             dismissButton = {
                 TextButton(onClick = { showAddProjectDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(26.dp),
+            containerColor = Color.White
         )
-    }
-
-    // Edit Project Next Action / Feedback Dialog
-    if (editingProjectId != null) {
-        val proj = projects.find { it.id == editingProjectId }
-        if (proj != null) {
-            var nextAct by rememberSaveable { mutableStateOf(proj.nextConcreteAction) }
-            var feedback by rememberSaveable { mutableStateOf(proj.userFeedbackSummary) }
-            var testing by rememberSaveable { mutableStateOf(proj.testingSummary) }
-            var impact by rememberSaveable { mutableStateOf(proj.impactSummary) }
-
-            AlertDialog(
-                onDismissRequest = { editingProjectId = null },
-                title = { Text("Update ${proj.name}") },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedTextField(
-                            value = nextAct,
-                            onValueChange = { nextAct = it },
-                            label = { Text("Next Concrete Action") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = feedback,
-                            onValueChange = { feedback = it },
-                            label = { Text("User Feedback Logged") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = testing,
-                            onValueChange = { testing = it },
-                            label = { Text("Testing Notes") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = impact,
-                            onValueChange = { impact = it },
-                            label = { Text("Real Documented Impact") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onUpdateProject(
-                                proj.copy(
-                                    nextConcreteAction = nextAct,
-                                    userFeedbackSummary = feedback,
-                                    testingSummary = testing,
-                                    impactSummary = impact
-                                )
-                            )
-                            editingProjectId = null
-                        }
-                    ) {
-                        Text("Save")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { editingProjectId = null }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProjectDetailCard(
-    project: ProjectEntity,
-    pipelineStages: List<String>,
-    onCycleStage: () -> Unit,
-    onStartNextAction: () -> Unit,
-    onEditProject: () -> Unit
-) {
-    val strengthBg = when (project.evidenceStrengthLabel) {
-        "STRONG" -> GentleSuccessLight
-        "BUILDING" -> WarmPeachLight
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-    val strengthFg = when (project.evidenceStrengthLabel) {
-        "STRONG" -> GentleSuccessGreen
-        "BUILDING" -> WarmPeachHighlight
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("project_card_${project.name.lowercase().replace(" ", "_")}")
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable { onCycleStage() }
-                ) {
-                    Text(
-                        text = "STAGE: ${project.pipelineStage} ↻",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                    )
-                }
-
-                StatusBadgeChip(
-                    label = "Evidence: ${project.evidenceStrengthLabel} (${project.evidenceCheckedCount}/9)",
-                    containerColor = strengthBg,
-                    contentColor = strengthFg
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = project.tagline,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Concrete Next Action Box
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "NEXT CONCRETE ACTION",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = project.nextConcreteAction,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "• Problem: ${project.problemStatement}\n" +
-                    "• Target User: ${project.targetUser}\n" +
-                    "• Tech & Role: ${project.technologyStack} (${project.myRole})\n" +
-                    "• Competition: ${project.competitionTarget}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Button(
-                    onClick = onStartNextAction,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.weight(1.4f)
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Start Next Action")
-                }
-
-                OutlinedButton(
-                    onClick = onEditProject,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Update")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProjectEvidenceCard(
-    project: ProjectEntity,
-    onUpdateProject: (ProjectEntity) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = project.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                StatusBadgeChip(
-                    label = "Evidence strength: ${project.evidenceStrengthLabel}",
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            val evidenceItems = listOf(
-                Triple("Problem documented", project.evProblemDocumented) { v: Boolean -> project.copy(evProblemDocumented = v) },
-                Triple("Prototype exists", project.evPrototypeExists) { v: Boolean -> project.copy(evPrototypeExists = v) },
-                Triple("Demo available", project.evDemoAvailable) { v: Boolean -> project.copy(evDemoAvailable = v) },
-                Triple("GitHub available", project.evGithubAvailable) { v: Boolean -> project.copy(evGithubAvailable = v) },
-                Triple("User feedback", project.evUserFeedback) { v: Boolean -> project.copy(evUserFeedback = v) },
-                Triple("Testing evidence", project.evTestingEvidence) { v: Boolean -> project.copy(evTestingEvidence = v) },
-                Triple("Presentation", project.evPresentation) { v: Boolean -> project.copy(evPresentation = v) },
-                Triple("Impact evidence", project.evImpactEvidence) { v: Boolean -> project.copy(evImpactEvidence = v) },
-                Triple("Competition submission", project.evCompetitionSubmission) { v: Boolean -> project.copy(evCompetitionSubmission = v) }
-            )
-
-            evidenceItems.forEach { (label, isChecked, updater) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable { onUpdateProject(updater(!isChecked)) }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = isChecked,
-                        onCheckedChange = { onUpdateProject(updater(it)) }
-                    )
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NcscModeSection(
-    preferences: UserPreferencesEntity,
-    onUpdateNcscSettings: (String, String, String, String) -> Unit,
-    onStartPitchFocus: (String) -> Unit
-) {
-    val checkedSet = preferences.ncscChecklistCsv.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Card(
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "NCSC COMPETITION PREPARATION MODE",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = preferences.ncscProjectTitle,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "${preferences.ncscEventName}  •  Target Date: ${preferences.ncscTargetDate}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Readiness: ${checkedSet.size} of ${DefaultWellnessData.ncscPreparationItems.size} areas prepared",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        SectionHeader(
-            title = "DAILY PREPARATION MISSIONS",
-            subtitle = "Tap any speaking/pitch mission to launch a 10-minute practice timer"
-        )
-
-        DefaultWellnessData.ncscDailyMissions.forEach { mission ->
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onStartPitchFocus(mission) }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "🎙️ $mission",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilledTonalButton(
-                        onClick = { onStartPitchFocus(mission) },
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("Practice", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }
-
-        SectionHeader(
-            title = "NCSC 12-POINT PREPARATION CHECKLIST",
-            subtitle = "Track your project report, model, and speaking readiness"
-        )
-
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                DefaultWellnessData.ncscPreparationItems.forEach { item ->
-                    val isChecked = item in checkedSet
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                val nextSet = if (isChecked) checkedSet - item else checkedSet + item
-                                onUpdateNcscSettings(
-                                    preferences.ncscEventName,
-                                    preferences.ncscTargetDate,
-                                    preferences.ncscProjectTitle,
-                                    nextSet.joinToString(",")
-                                )
-                            }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = isChecked,
-                            onCheckedChange = { checked ->
-                                val nextSet = if (checked) checkedSet + item else checkedSet - item
-                                onUpdateNcscSettings(
-                                    preferences.ncscEventName,
-                                    preferences.ncscTargetDate,
-                                    preferences.ncscProjectTitle,
-                                    nextSet.joinToString(",")
-                                )
-                            }
-                        )
-                        Text(
-                            text = item,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
     }
 }

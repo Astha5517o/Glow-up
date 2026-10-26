@@ -40,7 +40,7 @@ import androidx.room.RoomDatabase
         MissionJeetLectureEntity::class,
         HobbyEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class GlowUpDatabase : RoomDatabase() {

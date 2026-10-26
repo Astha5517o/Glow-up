@@ -1,14 +1,12 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,67 +16,100 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.CalendarEventEntity
+import com.example.data.DailyHabitEntity
 import com.example.data.MonthlyGoalEntity
 import com.example.data.NowRecommendation
 import com.example.data.OsTaskEntity
 import com.example.data.RecentWinEntity
 import com.example.data.TimelineBlockEntity
 import com.example.data.UserPreferencesEntity
-import com.example.ui.components.PrimaryButton
-import com.example.ui.components.SecondaryButton
-import com.example.ui.components.SectionHeader
-import com.example.ui.components.StatusBadgeChip
+import com.example.ui.components.ClayButton
+import com.example.ui.components.ClayCard
+import com.example.ui.components.ClayConcentricRingsCard
+import com.example.ui.components.ClayIconBadge
+import com.example.ui.components.ClayPill
+import com.example.ui.components.ClayPillButton
+import com.example.ui.components.ClayStatCard
+import com.example.ui.theme.ClayCoralAction
+import com.example.ui.theme.ClayCoralLight
+import com.example.ui.theme.ClayDeepPurple
+import com.example.ui.theme.ClayLavenderCard
+import com.example.ui.theme.ClayMintCard
+import com.example.ui.theme.ClayPaleLavenderSurface
+import com.example.ui.theme.ClayPeach
+import com.example.ui.theme.ClayPeachCard
+import com.example.ui.theme.ClayPrimaryLavender
+import com.example.ui.theme.ClayPrimaryText
+import com.example.ui.theme.ClayRoseCard
+import com.example.ui.theme.ClaySecondaryText
+import com.example.ui.theme.ClaySkyBlue
+import com.example.ui.theme.ClaySoftMint
+import com.example.ui.theme.ClayWarmIvory
 import com.example.ui.theme.GentleSuccessGreen
-import com.example.ui.theme.GentleSuccessLight
-import com.example.ui.theme.WarmPeachHighlight
-import com.example.ui.theme.WarmPeachLight
 import com.example.viewmodel.ActiveSubScreen
 import com.example.viewmodel.BottomNavTab
+import java.util.Calendar
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     greeting: String,
@@ -90,6 +121,8 @@ fun HomeScreen(
     calendarEvents: List<CalendarEventEntity> = emptyList(),
     monthlyGoals: List<MonthlyGoalEntity> = emptyList(),
     recentWins: List<RecentWinEntity> = emptyList(),
+    habits: List<DailyHabitEntity> = emptyList(),
+    onToggleHabit: ((DailyHabitEntity) -> Unit)? = null,
     onSetEnergyLevel: (String) -> Unit,
     onSetDayMode: (String) -> Unit,
     onStartNowRecommendation: (NowRecommendation) -> Unit,
@@ -117,594 +150,286 @@ fun HomeScreen(
     onNavigateTab: (BottomNavTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showEnergyCheckIn by rememberSaveable { mutableStateOf(true) }
+    var showSecondaryActionSheet by rememberSaveable { mutableStateOf(false) }
+    var showSeeAllTasksSheet by rememberSaveable { mutableStateOf(false) }
     var showAddTaskDialog by rememberSaveable { mutableStateOf(false) }
-    var showIHaveXMinutesDialog by rememberSaveable { mutableStateOf(false) }
-    var showImConfusedDialog by rememberSaveable { mutableStateOf(false) }
-    var showWhyExpanded by rememberSaveable { mutableStateOf(false) }
-    var showOtherOptionsExpanded by rememberSaveable { mutableStateOf(false) }
-    var showFullTimeline by rememberSaveable { mutableStateOf(false) }
-    var showImDistractedDialog by rememberSaveable { mutableStateOf(false) }
-    var taskToReschedule by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    val topThreeTasks = tasks.filter { it.isTopThree }.sortedBy { it.topThreeSlot }
-    val otherActiveTasks = tasks.filter { !it.isTopThree && !it.isPostponed }
-    val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+    // Secondary action options (I'm distracted, I have less time)
+    var showLessTimeDialog by rememberSaveable { mutableStateOf(false) }
+    var selectedLessMinutes by rememberSaveable { mutableIntStateOf(15) }
+
+    val activeTasks = tasks.filter { !it.isCompleted && !it.isPostponed }
+    val topPriorityTasks = activeTasks.filter { it.isTopThree }.sortedBy { it.topThreeSlot }.take(3)
+    val displayTasks = if (topPriorityTasks.isNotEmpty()) topPriorityTasks else activeTasks.take(3)
+
+    // Upcoming event filtering: find today/imminent event if any
+    val upcomingEvent = calendarEvents.firstOrNull { it.attendanceOrCompletionStatus != "COMPLETED" }
+
+    // Time & Day detection for Astha's personal life operating rhythm:
+    // - Morning (at or before 6 AM): Know immediately what to do right now
+    // - 10:00 PM: Today's productivity summary + tomorrow's queued tasks
+    // - Sunday: Weekly planning ritual to schedule the week for high productivity
+    // - Month boundary: Monthly horizon schedule & progress toward goals
+    val currentCal = remember { Calendar.getInstance() }
+    val currentHour = currentCal.get(Calendar.HOUR_OF_DAY)
+    val currentDayOfWeek = currentCal.get(Calendar.DAY_OF_WEEK)
+    val currentDayOfMonth = currentCal.get(Calendar.DAY_OF_MONTH)
+    val daysInMonth = currentCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+    val autoRhythm = when {
+        currentDayOfWeek == Calendar.SUNDAY && currentHour in 11..21 -> "SUNDAY"
+        currentDayOfMonth >= daysInMonth - 2 || currentDayOfMonth == 1 -> "MONTH"
+        currentHour in 4..11 -> "MORNING"
+        currentHour >= 21 || currentHour < 4 -> "NIGHT"
+        else -> "MORNING"
+    }
+    var selectedRhythm by rememberSaveable { mutableStateOf(autoRhythm) }
+
+    // Contextual greeting supporting line
+    val greetingHeadline = when {
+        greeting.contains("evening", ignoreCase = true) -> "Good evening."
+        greeting.contains("afternoon", ignoreCase = true) -> "Good afternoon."
+        else -> "Good morning."
+    }
+    val supportingLine = when {
+        greeting.contains("evening", ignoreCase = true) -> "Your evening is still yours."
+        greeting.contains("afternoon", ignoreCase = true) -> "Stay steady. You're doing great."
+        else -> "Know what matters. Do the next right thing."
+    }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .background(ClayWarmIvory)
             .testTag("today_screen_list"),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // 1. PERSONAL FEED COMMAND CENTER HEADER
+        // -------------------------------------------------------------
+        // 1. WELCOMING HEADER
+        // -------------------------------------------------------------
         item {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = greeting.uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
+                            text = greetingHeadline,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = ClayPrimaryText,
                             modifier = Modifier.testTag("home_greeting_text")
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
+                            text = supportingLine,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = ClaySecondaryText,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
                             text = formattedDate,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = ClayDeepPurple,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "“${nowRecommendation.contextualLine}”",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
 
-                    // Compact ASTHA AI entry pill
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(18.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.AsthaAiSheet) }
-                            .testTag("header_astha_ai_button")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.AutoAwesome,
-                                contentDescription = "Open ASTHA AI",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "ASTHA AI",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Effortless Energy & Mode Bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf("LOW" to "🌿 Low Energy", "NORMAL" to "✨ Normal", "HIGH" to "⚡ High Energy").forEach { (key, label) ->
-                        val isSelected = preferences.currentEnergyLevel == key
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .clickable { onSetEnergyLevel(key) }
-                                .testTag("energy_chip_${key.lowercase()}")
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
-                            )
-                        }
-                    }
-
-                    val modes = listOf("School day", "Weekend", "Exam preparation", "Competition preparation")
-                    modes.forEach { mode ->
-                        val selected = preferences.currentDayMode == mode
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                1.dp,
-                                if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .clickable { onSetDayMode(mode) }
-                        ) {
-                            Text(
-                                text = mode,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // 2. ONE LARGE DYNAMIC "YOUR NEXT MOVE" HERO CARD
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("what_should_i_do_now_card"),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = nowRecommendation.categoryBadge,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        StatusBadgeChip(
-                            label = "${nowRecommendation.durationMinutes} min",
-                            containerColor = WarmPeachLight,
-                            contentColor = WarmPeachHighlight
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // My Day, My Way active rhythm pill
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        // Subtle ASAA AI Badge
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = GentleSuccessLight,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("PLAN MY DAY")) }
-                                .testTag("my_day_my_way_badge")
+                            onClick = { onOpenSubScreen(ActiveSubScreen.AsthaAiSheet) },
+                            shape = RoundedCornerShape(18.dp),
+                            color = ClayPaleLavenderSurface,
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.8f)),
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.testTag("open_astha_ai_button")
                         ) {
-                            Text(
-                                text = "My Day, My Way: ${nowRecommendation.selectedDayType} ✎",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = GentleSuccessGreen,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-
-                    // Conflict Warning Banner when Rest/Family day overlaps with an urgent event
-                    if (!nowRecommendation.conflictWarningMessage.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = WarmPeachLight,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("PLAN MY DAY")) }
-                        ) {
-                            Text(
-                                text = nowRecommendation.conflictWarningMessage,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = WarmPeachHighlight,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Big scannable subject / project title (e.g. Krow • 20 min)
-                    Text(
-                        text = "${nowRecommendation.title} • ${nowRecommendation.durationMinutes} min",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Concise 1-2 line concrete description
-                    Text(
-                        text = nowRecommendation.subtitleShort,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Human-intelligent personal context sentence
-                    Text(
-                        text = nowRecommendation.humanHeadline,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Progressive Disclosure: Tap to expand full steps & why
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable { showWhyExpanded = !showWhyExpanded }
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AutoAwesome,
+                                    contentDescription = "ASAA AI",
+                                    tint = ClayDeepPurple,
+                                    modifier = Modifier.size(15.dp)
+                                )
                                 Text(
-                                    text = if (showWhyExpanded) "HOW & WHY (Tap to collapse)" else "Tap for exact step-by-step & why ▾",
+                                    text = "ASAA",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = nowRecommendation.priorityDomain,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                            if (showWhyExpanded) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = nowRecommendation.concreteAction,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Why now: ${nowRecommendation.whyReason}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = ClayDeepPurple
                                 )
                             }
                         }
-                    }
 
-                    // Expandable Alternate Options ("OTHER OPTIONS")
-                    if (showOtherOptionsExpanded && nowRecommendation.alternateOptions.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(10.dp))
+                        // Delightful Clay Personal Avatar
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = CircleShape,
+                            color = ClayPaleLavenderSurface,
+                            shadowElevation = 3.dp,
+                            border = BorderStroke(2.dp, Color.White),
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(CircleShape)
+                                .clickable { onNavigateTab(BottomNavTab.PROFILE) }
                         ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
+                            Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = "OTHER BALANCED OPTIONS RIGHT NOW",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    text = preferences.userName.take(1).ifBlank { "A" }.uppercase(),
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.secondary
+                                    color = ClayDeepPurple
                                 )
-                                nowRecommendation.alternateOptions.forEach { alt ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .clickable { onSkipNowRecommendation(nowRecommendation) }
-                                            .padding(vertical = 4.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "• $alt",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                        Text(
-                                            text = "Switch →",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
                             }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    // Obvious Primary Action: [ Start Next Task ] + [ Change Plan ]
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            onClick = { onStartNowRecommendation(nowRecommendation) },
-                            shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            modifier = Modifier
-                                .weight(1.5f)
-                                .height(56.dp)
-                                .minimumInteractiveComponentSize()
-                                .testTag("start_now_recommendation_button")
-                        ) {
-                            Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Start Next Task",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                showOtherOptionsExpanded = !showOtherOptionsExpanded
-                                if (!showOtherOptionsExpanded) {
-                                    onSkipNowRecommendation(nowRecommendation)
-                                }
-                            },
-                            shape = RoundedCornerShape(18.dp),
-                            modifier = Modifier
-                                .weight(1.1f)
-                                .height(56.dp)
-                                .testTag("skip_recommendation_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Refresh,
-                                contentDescription = "Change Plan",
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Change Plan",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Prominent Gentle Distraction Recovery Button
-                    OutlinedButton(
-                        onClick = { showImDistractedDialog = true },
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("today_im_distracted_button"),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Text(
-                            text = "💭 I'm Distracted (Gentle Recovery & Park Thoughts)",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Subtle helper row inside hero card
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = { showIHaveXMinutesDialog = true },
-                            modifier = Modifier.testTag("i_have_x_minutes_button")
-                        ) {
-                            Text("⏱️ I only have X minutes")
-                        }
-                        TextButton(
-                            onClick = { showImConfusedDialog = true },
-                            modifier = Modifier.testTag("im_confused_button")
-                        ) {
-                            Text("🧭 I'm overwhelmed / confused")
                         }
                     }
                 }
             }
         }
 
-        // 2B. THIS WEEK (Upcoming Calendar Deadlines & Calm Countdowns) + THIS MONTH (Monthly Focus)
+        // -------------------------------------------------------------
+        // 2. CONCENTRIC 3D ACTIVITY RINGS CARD (SCREENSHOT 1 CENTERPIECE)
+        // -------------------------------------------------------------
+        item {
+            ClayConcentricRingsCard(
+                studyProgress = 0.79f,
+                buildProgress = 0.52f,
+                wellnessProgress = 0.90f,
+                centerValue = "742",
+                centerUnit = "flow score today",
+                studyLabel = "Study 79%",
+                buildLabel = "Build 52%",
+                wellnessLabel = "Rhythm 90%",
+                onCardClick = { onNavigateTab(BottomNavTab.STUDY) },
+                testTag = "home_concentric_rings_card"
+            )
+        }
+
+        // -------------------------------------------------------------
+        // 3. QUICK 3 PILLOWY STAT CARDS (STEPS, DISTANCE, HEART RATE)
+        // -------------------------------------------------------------
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // THIS WEEK CARD
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("CALENDAR")) }
-                        .testTag("home_this_week_card")
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "THIS WEEK",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        val upcomingEvents = calendarEvents.take(3)
-                        if (upcomingEvents.isEmpty()) {
-                            Text("• Physics test — Tomorrow", style = MaterialTheme.typography.bodySmall)
-                            Text("• NCSC prep — 5 days", style = MaterialTheme.typography.bodySmall)
-                            Text("• Krow feedback — 3 days", style = MaterialTheme.typography.bodySmall)
-                        } else {
-                            upcomingEvents.forEach { ev ->
-                                val diff = calculateDaysBetween(todayStr, ev.dateString)
-                                val label = when {
-                                    diff <= 0 -> "Today"
-                                    diff == 1 -> "Tomorrow"
-                                    else -> "$diff days"
-                                }
-                                Text(
-                                    text = "• ${ev.title.take(18)} — $label",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Open Calendar →",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                // Stat 1: Study PCM (Mint Card)
+                ClayStatCard(
+                    title = "Study PCM",
+                    value = "2h 15m",
+                    icon = Icons.Default.Schedule,
+                    containerColor = ClayMintCard,
+                    iconColor = Color(0xFF285E3D),
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigateTab(BottomNavTab.STUDY) },
+                    testTag = "quick_stat_study"
+                )
 
-                // THIS MONTH CARD
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("MONTHLY GOALS")) }
-                        .testTag("home_this_month_card")
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "THIS MONTH",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        val topMonthly = monthlyGoals.take(3)
-                        if (topMonthly.isEmpty()) {
-                            Text("• Validate Krow with users", style = MaterialTheme.typography.bodySmall)
-                            Text("• NCSC presentation ready", style = MaterialTheme.typography.bodySmall)
-                            Text("• Strengthen Physics", style = MaterialTheme.typography.bodySmall)
-                        } else {
-                            topMonthly.forEach { mg ->
-                                Text(
-                                    text = "• ${mg.title.take(24)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Monthly Goals →",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
+                // Stat 2: Build Krow (Peach Card)
+                ClayStatCard(
+                    title = "Build Krow",
+                    value = "Stage 2",
+                    icon = Icons.Default.Code,
+                    containerColor = ClayPeachCard,
+                    iconColor = Color(0xFF9A4518),
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigateTab(BottomNavTab.BUILD) },
+                    testTag = "quick_stat_build"
+                )
+
+                // Stat 3: Wellness & Joy (Rose Card)
+                ClayStatCard(
+                    title = "Dance / Joy",
+                    value = "20 min",
+                    icon = Icons.Default.Favorite,
+                    containerColor = ClayRoseCard,
+                    iconColor = Color(0xFF993B47),
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigateTab(BottomNavTab.WELLNESS) },
+                    testTag = "quick_stat_wellness"
+                )
             }
         }
 
-        // 2C. RECENT WINS & VISIBLE MOMENTUM ("What changed because of my effort?")
-        if (recentWins.isNotEmpty()) {
+        // -------------------------------------------------------------
+        // 4. ENERGY CHECK-IN (Compact, tactile, skippable)
+        // -------------------------------------------------------------
+        if (showEnergyCheckIn) {
             item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = GentleSuccessLight.copy(alpha = 0.65f)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("recent_wins_card")
+                ClayCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    containerColor = Color.White,
+                    elevation = 3.dp
                 ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 14.dp)
+                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "RECENT WINS • VISIBLE PROGRESS",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "How are you feeling?",
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = GentleSuccessGreen
+                                color = ClayPrimaryText
                             )
                             Text(
-                                text = "Momentum",
+                                text = "Skip",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = GentleSuccessGreen
+                                color = ClaySecondaryText,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { showEnergyCheckIn = false }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        recentWins.take(3).forEach { win ->
-                            Row(
-                                modifier = Modifier.padding(vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "✓ ${win.title}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "— ${win.whatChangedDetail}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(
+                                "LOW" to "Low energy",
+                                "NORMAL" to "Normal",
+                                "HIGH" to "High energy"
+                            ).forEach { (levelKey, label) ->
+                                val isSelected = preferences.currentEnergyLevel.equals(levelKey, ignoreCase = true)
+                                ClayPill(
+                                    label = label,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        onSetEnergyLevel(levelKey)
+                                    },
+                                    selectedContainerColor = when (levelKey) {
+                                        "LOW" -> ClayPeach
+                                        "HIGH" -> ClaySoftMint
+                                        else -> ClayPaleLavenderSurface
+                                    },
+                                    selectedContentColor = when (levelKey) {
+                                        "LOW" -> Color(0xFF9A4518)
+                                        "HIGH" -> Color(0xFF285E3D)
+                                        else -> ClayDeepPurple
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    testTag = "energy_pill_${levelKey.lowercase()}"
                                 )
                             }
                         }
@@ -713,309 +438,864 @@ fun HomeScreen(
             }
         }
 
-        // 3. CONTEXTUAL LIFE MODES (Effortless Horizontal Strip)
+        // -------------------------------------------------------------
+        // 5. ASTHA'S PERSONAL OPERATING RHYTHM SELECTOR
+        // (Morning 6 AM, 10 PM Close, Sunday Week Schedule, Monthly Horizon)
+        // -------------------------------------------------------------
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.AfterSchoolResetSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("after_school_reset_button")
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🏠 After-School Reset")
+                    Text(
+                        text = "Operating Rhythm",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ClayPrimaryText
+                    )
+                    Text(
+                        text = when (selectedRhythm) {
+                            "MORNING" -> "🌅 6:00 AM Launch"
+                            "NIGHT" -> "🌙 10:00 PM Gentle Close"
+                            "SUNDAY" -> "🗓️ Sunday Week Reset"
+                            else -> "🎯 Monthly Horizons"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ClayDeepPurple,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.SchoolModeSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("school_mode_button")
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("🏫 School Mode")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.MorningModeSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("morning_mode_button")
-                ) {
-                    Text("☀️ What Should I Study Today?")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.ChemistryMissionSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("chemistry_mission_quick_button")
-                ) {
-                    Text("🎯 Chemistry 100 Mission")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.AcademicExcellenceSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("academic_excellence_quick_button")
-                ) {
-                    Text("📚 Academic Engine")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.ScienceExhibitionSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("science_exhibition_quick_button")
-                ) {
-                    Text("🔬 Science Exhibition")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.ScholarshipStrategySheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("scholarships_quick_button")
-                ) {
-                    Text("🎓 MEXT & Scholarships")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.AngerOverwhelmPauseSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("overwhelm_pause_quick_button")
-                ) {
-                    Text("🕊️ Calm Pause Protocol")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.EntertainmentWalletSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("entertainment_wallet_button")
-                ) {
-                    Text("🎬 ${preferences.entertainmentTitle} Wallet")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.SetbackRecoverySheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("self_respect_reframe_button")
-                ) {
-                    Text("🛡️ Reframe Setback")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.ConfidenceLabSheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("confidence_lab_button")
-                ) {
-                    Text("🎤 Confidence Lab")
-                }
-                OutlinedButton(
-                    onClick = { onOpenSubScreen(ActiveSubScreen.FinancialLiteracySheet) },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("value_creation_button")
-                ) {
-                    Text("📈 Value & Budget")
-                }
-            }
-        }
-
-        // 4. TODAY'S TOP 3 (Clean, Scannable Cards)
-        item {
-            SectionHeader(
-                title = "TODAY'S TOP 3",
-                subtitle = "1. Academic  •  2. Project/Profile  •  3. Wellness",
-                actionText = "+ Add Task",
-                onActionClick = { showAddTaskDialog = true }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (topThreeTasks.isEmpty() && otherActiveTasks.isEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Your day is clear.", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedButton(onClick = { showAddTaskDialog = true }) {
-                            Text("Add Task")
-                        }
-                    }
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    val displayTasks = (topThreeTasks + otherActiveTasks).take(3)
-                    displayTasks.forEachIndexed { idx, task ->
-                        TopThreeTaskCard(
-                            indexNumber = String.format(java.util.Locale.US, "%02d", idx + 1),
-                            task = task,
-                            onStart = { onStartTaskFocus(task) },
-                            onToggleComplete = { onToggleTask(task) },
-                            onPostpone = { onPostponeTask(task) },
-                            onReschedule = { taskToReschedule = task.id }
+                    val rhythmPills = listOf(
+                        "MORNING" to "🌅 Morning (6 AM)",
+                        "NIGHT" to "🌙 10 PM Close",
+                        "SUNDAY" to "🗓️ Sunday Week",
+                        "MONTH" to "🎯 Monthly Goals"
+                    )
+                    rhythmPills.forEach { (key, label) ->
+                        val isSelected = selectedRhythm == key
+                        ClayPill(
+                            label = label,
+                            isSelected = isSelected,
+                            onClick = { selectedRhythm = key },
+                            selectedContainerColor = when (key) {
+                                "MORNING" -> ClayPeachCard
+                                "NIGHT" -> ClayPaleLavenderSurface
+                                "SUNDAY" -> ClayMintCard
+                                else -> ClayRoseCard
+                            },
+                            selectedContentColor = when (key) {
+                                "MORNING" -> Color(0xFF9A4518)
+                                "NIGHT" -> ClayDeepPurple
+                                "SUNDAY" -> Color(0xFF285E3D)
+                                else -> Color(0xFF993B47)
+                            },
+                            testTag = "rhythm_pill_${key.lowercase()}"
                         )
                     }
-
-                    val repeatedlyPostponed = (topThreeTasks + otherActiveTasks).firstOrNull { it.skipCount >= 2 || it.isPostponed }
-                    if (repeatedlyPostponed != null) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SelfImprovement,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Postponement Triage: '${repeatedlyPostponed.title.take(24)}'",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                                    )
-                                    Text(
-                                        text = "Repeated postponing usually means the step is too big. Want to do a gentle 5-minute micro-step?",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                                    )
-                                }
-                                TextButton(
-                                    onClick = {
-                                        onStartTaskFocus(
-                                            repeatedlyPostponed.copy(
-                                                title = "5-Min Step: ${repeatedlyPostponed.title}",
-                                                durationMinutes = 5
-                                            )
-                                        )
-                                    }
-                                ) {
-                                    Text("5-Min Step", fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
 
-        // 5. PROGRESSIVE DISCLOSURE: SMART DAILY TIMELINE & RECOVERY
+        // -------------------------------------------------------------
+        // 6. DEDICATED RHYTHM CARD (DYNAMICALLY REACTIVE TO SELECTED MODE)
+        // -------------------------------------------------------------
         item {
-            SectionHeader(
-                title = "DAILY FLOW & RECOVERY",
-                subtitle = if (showFullTimeline) "Tap any block to mark complete" else "Showing next key blocks • Expand to see full day",
-                actionText = if (showFullTimeline) "Collapse" else "Full Plan (${timelineBlocks.size})",
-                onActionClick = { showFullTimeline = !showFullTimeline }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
+            when (selectedRhythm) {
+                "MORNING" -> {
+                    // -------------------------------------------------
+                    // MORNING LAUNCH CARD (BEFORE / AT 6:00 AM)
+                    // "immediately what to do right now with zero friction"
+                    // -------------------------------------------------
+                    val task = nowRecommendation.taskToStart
+                    val category = task?.domain?.ifBlank { "MISSION JEET" } ?: "CLASS 11 PCM"
+                    val title = nowRecommendation.title.ifBlank { "Rotational Motion & Core Formulas" }
+                    val instruction = task?.subtitle?.ifBlank {
+                        "Try two easy questions, then move to one medium question."
+                    } ?: "Focus purely on understanding this single concept before moving on."
+                    val durationMinutes = nowRecommendation.durationMinutes.coerceAtLeast(15)
 
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val visibleBlocks = if (showFullTimeline) {
-                        timelineBlocks
-                    } else {
-                        timelineBlocks.filter { !it.isCompleted }.take(3).ifEmpty { timelineBlocks.take(3) }
-                    }
-                    visibleBlocks.forEach { block ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onToggleTimelineBlock(block) }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (block.isCompleted) {
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                                },
-                                modifier = Modifier.width(86.dp)
-                            ) {
-                                Text(
-                                    text = if (block.endTime.isNotBlank() && block.endTime != block.startTime) {
-                                        "${block.startTime}–${block.endTime}"
-                                    } else {
-                                        block.startTime
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (block.isCompleted) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = block.title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textDecoration = if (block.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                                )
-                                Text(
-                                    text = block.subtitle,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            Icon(
-                                imageVector = if (block.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                                contentDescription = "Toggle ${block.title}",
-                                tint = if (block.isCompleted) GentleSuccessGreen else MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
+                    ClayCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable { onOpenSubScreen(ActiveSubScreen.RecoveryResetSheet) }
-                            .testTag("timeline_reset_from_here_banner")
+                            .testTag("morning_now_card"),
+                        shape = RoundedCornerShape(28.dp),
+                        containerColor = ClayLavenderCard,
+                        borderColor = Color.White.copy(alpha = 0.95f),
+                        elevation = 6.dp
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(22.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Filled.Refresh,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    border = BorderStroke(1.dp, Color.White)
+                                ) {
+                                    Text(
+                                        text = "🌅 6:00 AM • WHAT TO DO NOW",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = ClayDeepPurple,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { showSecondaryActionSheet = true },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("task_secondary_action_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreHoriz,
+                                        contentDescription = "More options",
+                                        tint = ClaySecondaryText
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(22.dp),
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    border = BorderStroke(1.2.dp, Color.White),
+                                    shadowElevation = 2.dp,
+                                    modifier = Modifier.size(62.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.PlayArrow,
+                                            contentDescription = null,
+                                            tint = ClayDeepPurple,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ClayPrimaryText,
+                                        lineHeight = 26.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = Color.White.copy(alpha = 0.7f),
+                                            border = BorderStroke(0.8.dp, Color.White)
+                                        ) {
+                                            Text(
+                                                text = "$durationMinutes min",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ClayDeepPurple,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = ClayPaleLavenderSurface,
+                                            border = BorderStroke(0.8.dp, Color.White)
+                                        ) {
+                                            Text(
+                                                text = category,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = ClayDeepPurple,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = instruction,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ClaySecondaryText,
+                                lineHeight = 20.sp
+                            )
+
+                            // Morning quick habit checkoffs if available
+                            val morningHabits = habits.take(3)
+                            if (morningHabits.isNotEmpty() && onToggleHabit != null) {
+                                Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    text = "Running late? Let's reset from here.",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    text = "Morning Primers:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ClaySecondaryText
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    morningHabits.forEach { habit ->
+                                        Surface(
+                                            onClick = { onToggleHabit(habit) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = if (habit.completedToday) ClaySoftMint.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.7f),
+                                            border = BorderStroke(1.dp, Color.White),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (habit.completedToday) Icons.Default.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                                                    contentDescription = null,
+                                                    tint = if (habit.completedToday) GentleSuccessGreen else ClaySecondaryText,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = habit.title.take(12),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = ClayPrimaryText,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Coral Action Button
+                            ClayPillButton(
+                                text = "Start morning focus now (${durationMinutes}m)",
+                                icon = Icons.Default.PlayArrow,
+                                onClick = {
+                                    onStartNowRecommendation(nowRecommendation)
+                                },
+                                containerColor = ClayCoralAction,
+                                height = 48.dp,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "start_focus_primary_button"
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                TextButton(
+                                    onClick = { onOpenSubScreen(ActiveSubScreen.MorningModeSheet) }
+                                ) {
+                                    Text(
+                                        text = "Open full morning routine & schedule 🌅",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = ClayDeepPurple,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                "NIGHT" -> {
+                    // -------------------------------------------------
+                    // 10:00 PM GENTLE CLOSE & TOMORROW'S TASKS CARD
+                    // "at 10 pm what are tomorrows task and today day productivity"
+                    // -------------------------------------------------
+                    val completedCount = tasks.count { it.isCompleted }
+                    val totalTasks = tasks.size
+                    val completedHabits = habits.count { it.completedToday }
+                    val tomorrowTasks = activeTasks.take(3)
+
+                    ClayCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("night_close_card"),
+                        shape = RoundedCornerShape(28.dp),
+                        containerColor = ClayPaleLavenderSurface,
+                        borderColor = Color.White.copy(alpha = 0.95f),
+                        elevation = 6.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(22.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color.White.copy(alpha = 0.85f),
+                                border = BorderStroke(1.dp, Color.White)
+                            ) {
+                                Text(
+                                    text = "🌙 10:00 PM GENTLE CLOSE",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = ClayDeepPurple,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
                             Text(
-                                text = "Recalculate",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "Today's Productivity Recap",
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = ClayPrimaryText
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Zero guilt. You showed up today with heart Astha.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ClaySecondaryText
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // 3 Clay Productivity Stat Cards
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White,
+                                    border = BorderStroke(1.dp, Color(0xFFE8E2D7)),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "$completedCount / $totalTasks",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = ClayCoralAction
+                                        )
+                                        Text(
+                                            text = "Tasks Done",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = ClaySecondaryText
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White,
+                                    border = BorderStroke(1.dp, Color(0xFFE8E2D7)),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "742",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = ClayDeepPurple
+                                        )
+                                        Text(
+                                            text = "Flow Score",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = ClaySecondaryText
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White,
+                                    border = BorderStroke(1.dp, Color(0xFFE8E2D7)),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "$completedHabits / ${habits.size.coerceAtLeast(1)}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color(0xFF285E3D)
+                                        )
+                                        Text(
+                                            text = "Habit Wins",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = ClaySecondaryText
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Text(
+                                text = "Tomorrow's Queued Priorities",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            if (tomorrowTasks.isEmpty()) {
+                                Text(
+                                    text = "No pending tasks! Tomorrow's slate is pristine.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ClaySecondaryText
+                                )
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    tomorrowTasks.forEachIndexed { index, taskItem ->
+                                        Surface(
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = Color.White.copy(alpha = 0.85f),
+                                            border = BorderStroke(1.dp, Color.White),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.weight(1f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                ) {
+                                                    Surface(
+                                                        shape = CircleShape,
+                                                        color = ClayCoralLight,
+                                                        modifier = Modifier.size(22.dp)
+                                                    ) {
+                                                        Box(contentAlignment = Alignment.Center) {
+                                                            Text(
+                                                                text = "${index + 1}",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = ClayCoralAction
+                                                            )
+                                                        }
+                                                    }
+                                                    Column {
+                                                        Text(
+                                                            text = taskItem.title,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = ClayPrimaryText,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                        Text(
+                                                            text = taskItem.domain.ifBlank { "Class 11 PCM" },
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = ClaySecondaryText
+                                                        )
+                                                    }
+                                                }
+                                                Text(
+                                                    text = "${taskItem.durationMinutes}m",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = ClayDeepPurple
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            ClayPillButton(
+                                text = "Complete 10 PM gentle close & lock tomorrow",
+                                icon = Icons.Default.CheckCircle,
+                                onClick = {
+                                    onOpenSubScreen(ActiveSubScreen.CloseTodayGentlySheet)
+                                },
+                                containerColor = ClayCoralAction,
+                                height = 48.dp,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "night_gentle_close_button"
+                            )
+                        }
+                    }
+                }
+
+                "SUNDAY" -> {
+                    // -------------------------------------------------
+                    // SUNDAY WEEKLY RESET & SCHEDULING CARD
+                    // "each sunday i have to schedule my week to make it productive"
+                    // -------------------------------------------------
+                    ClayCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("sunday_schedule_card"),
+                        shape = RoundedCornerShape(28.dp),
+                        containerColor = ClayMintCard,
+                        borderColor = Color.White.copy(alpha = 0.95f),
+                        elevation = 6.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(22.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color.White.copy(alpha = 0.85f),
+                                border = BorderStroke(1.dp, Color.White)
+                            ) {
+                                Text(
+                                    text = "🗓️ SUNDAY RITUAL • WEEK PLANNER",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF285E3D),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "Design Your High-Flow Week",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Map your weekly commitments across study, innovation, and joy.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ClaySecondaryText
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // 3 Pillars Overview
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    border = BorderStroke(1.dp, Color.White),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        ClayIconBadge(
+                                            icon = Icons.Default.Schedule,
+                                            containerColor = ClayMintCard,
+                                            iconColor = Color(0xFF285E3D),
+                                            size = 36.dp,
+                                            iconSize = 18.dp
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "1. Class 11 PCM Mastery (18h)",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ClayPrimaryText
+                                            )
+                                            Text(
+                                                text = "Rotational Dynamics, Thermodynamics, Calculus",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ClaySecondaryText
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    border = BorderStroke(1.dp, Color.White),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        ClayIconBadge(
+                                            icon = Icons.Default.Code,
+                                            containerColor = ClayPeachCard,
+                                            iconColor = Color(0xFF9A4518),
+                                            size = 36.dp,
+                                            iconSize = 18.dp
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "2. Krow Innovation Prototype (6h)",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ClayPrimaryText
+                                            )
+                                            Text(
+                                                text = "Stage 2 audio hardware assembly & sensor tests",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ClaySecondaryText
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    border = BorderStroke(1.dp, Color.White),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        ClayIconBadge(
+                                            icon = Icons.Default.Favorite,
+                                            containerColor = ClayRoseCard,
+                                            iconColor = Color(0xFF993B47),
+                                            size = 36.dp,
+                                            iconSize = 18.dp
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "3. Wellness, Kathak & Rest (Daily)",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ClayPrimaryText
+                                            )
+                                            Text(
+                                                text = "20 min dance groove, restorative 8h sleep cycle",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ClaySecondaryText
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            ClayPillButton(
+                                text = "Open Sunday Weekly Planner",
+                                icon = Icons.Default.CalendarMonth,
+                                onClick = {
+                                    onOpenSubScreen(ActiveSubScreen.WeeklyReviewSheet)
+                                },
+                                containerColor = ClayCoralAction,
+                                height = 48.dp,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "sunday_weekly_plan_button"
+                            )
+                        }
+                    }
+                }
+
+                else -> {
+                    // -------------------------------------------------
+                    // MONTHLY HORIZON & GOALS TRACKER CARD
+                    // "before each month to schedule what i am gonna do and how i am getting close to my goal"
+                    // -------------------------------------------------
+                    val displayGoals = if (monthlyGoals.isNotEmpty()) monthlyGoals else listOf(
+                        com.example.data.MonthlyGoalEntity(
+                            id = 101,
+                            title = "Physics Mechanics Mastery (PYQs)",
+                            domain = "ACADEMICS",
+                            weeklyTarget = "Solve 25 advanced PYQs per week",
+                            todaySmallestStep = "Derive moment of inertia for ring & disk",
+                            progressStepsDone = 3,
+                            progressStepsTotal = 4
+                        ),
+                        com.example.data.MonthlyGoalEntity(
+                            id = 102,
+                            title = "Krow Audio Prototype Stage 2",
+                            domain = "PROJECT",
+                            weeklyTarget = "Assemble breadboard circuitry & testing",
+                            todaySmallestStep = "Wire microphone sensor to ESP32 board",
+                            progressStepsDone = 2,
+                            progressStepsTotal = 4
+                        ),
+                        com.example.data.MonthlyGoalEntity(
+                            id = 103,
+                            title = "Kathak Dance & Energetic Health",
+                            domain = "WELLNESS",
+                            weeklyTarget = "4 sessions per week (20 min each)",
+                            todaySmallestStep = "Complete 20 min morning Kathak footwork",
+                            progressStepsDone = 4,
+                            progressStepsTotal = 5
+                        )
+                    )
+
+                    ClayCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("monthly_goals_card"),
+                        shape = RoundedCornerShape(28.dp),
+                        containerColor = ClayPeachCard,
+                        borderColor = Color.White.copy(alpha = 0.95f),
+                        elevation = 6.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(22.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color.White.copy(alpha = 0.85f),
+                                border = BorderStroke(1.dp, Color.White)
+                            ) {
+                                Text(
+                                    text = "🎯 MONTHLY HORIZON & GOALS",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF9A4518),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "How You're Getting Closer To Your Goals",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Schedule next month's focus & see milestones completed.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ClaySecondaryText
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                displayGoals.forEach { goal ->
+                                    val progressFraction = (goal.progressStepsDone.toFloat() / goal.progressStepsTotal.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+                                    val percentInt = (progressFraction * 100).toInt()
+
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        border = BorderStroke(1.dp, Color.White),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = goal.title,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = ClayPrimaryText,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(50),
+                                                    color = ClayCoralLight,
+                                                    modifier = Modifier.padding(start = 8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "$percentInt%",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        color = ClayCoralAction,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(6.dp))
+
+                                            LinearProgressIndicator(
+                                                progress = { progressFraction },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(7.dp)
+                                                    .clip(RoundedCornerShape(4.dp)),
+                                                color = ClayCoralAction,
+                                                trackColor = Color(0xFFF0EBE1)
+                                            )
+
+                                            Spacer(modifier = Modifier.height(6.dp))
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = "Next step: ${goal.todaySmallestStep}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = ClaySecondaryText,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Text(
+                                                    text = "${goal.progressStepsDone}/${goal.progressStepsTotal} milestones",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = ClayDeepPurple
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            ClayPillButton(
+                                text = "Schedule month & review horizons",
+                                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                onClick = {
+                                    onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("MONTHLY GOALS"))
+                                },
+                                containerColor = ClayCoralAction,
+                                height = 48.dp,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "monthly_horizon_schedule_button"
                             )
                         }
                     }
@@ -1023,677 +1303,588 @@ fun HomeScreen(
             }
         }
 
-        // 6. QUICK ACTIONS (+ Task, Study, Build, Brain Dump, Wellness)
+        // -------------------------------------------------------------
+        // 4. TODAY'S PLAN (Compact, max 3 priority items, simple rows)
+        // -------------------------------------------------------------
         item {
-            SectionHeader(
-                title = "QUICK JUMP",
-                subtitle = "Direct access without clutter"
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            FlowRow(
+            ClayCard(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                shape = RoundedCornerShape(26.dp),
+                containerColor = Color.White,
+                elevation = 4.dp
             ) {
-                QuickActionPill(
-                    label = "🎯 Mission Jeet",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.MissionJeetSheet) },
-                    testTag = "quick_action_mission_jeet"
-                )
-                QuickActionPill(
-                    label = "🎨 Hobbies & Joy",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.HobbiesAndJoySheet) },
-                    testTag = "quick_action_hobbies"
-                )
-                QuickActionPill(
-                    label = "🍃 After-School Reset",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.AfterSchoolResetSheet) },
-                    testTag = "quick_action_reset"
-                )
-                QuickActionPill(
-                    label = "🌅 Morning Study (6-7:15)",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.MorningModeSheet) },
-                    testTag = "quick_action_morning_study"
-                )
-                QuickActionPill(
-                    label = "+ Task",
-                    onClick = { showAddTaskDialog = true },
-                    testTag = "quick_action_add_task"
-                )
-                QuickActionPill(
-                    label = "📅 Life Calendar",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("CALENDAR")) },
-                    testTag = "quick_action_calendar"
-                )
-                QuickActionPill(
-                    label = "✨ Plan My Day",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("PLAN MY DAY")) },
-                    testTag = "quick_action_plan_my_day"
-                )
-                QuickActionPill(
-                    label = "🌙 Close Today Gently",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.CloseTodayGentlySheet) },
-                    testTag = "quick_action_close_today"
-                )
-                QuickActionPill(
-                    label = "🎯 Monthly Goals",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("MONTHLY GOALS")) },
-                    testTag = "quick_action_monthly_goals"
-                )
-                QuickActionPill(
-                    label = "🔭 Long-Term Vision",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.CalendarHorizonsSheet("LONG-TERM VISION")) },
-                    testTag = "quick_action_long_term_vision"
-                )
-                QuickActionPill(
-                    label = "📚 Study",
-                    onClick = { onNavigateTab(BottomNavTab.STUDY) },
-                    testTag = "quick_action_study"
-                )
-                QuickActionPill(
-                    label = "🚀 Build",
-                    onClick = { onNavigateTab(BottomNavTab.BUILD) },
-                    testTag = "quick_action_build"
-                )
-                QuickActionPill(
-                    label = "🧠 Brain Dump",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.BrainDumpSheet) },
-                    testTag = "quick_action_brain_dump"
-                )
-                QuickActionPill(
-                    label = "🌿 Wellness",
-                    onClick = { onNavigateTab(BottomNavTab.WELLNESS) },
-                    testTag = "quick_action_wellness"
-                )
-                QuickActionPill(
-                    label = "📊 Week in Review",
-                    onClick = { onOpenSubScreen(ActiveSubScreen.WeeklyReviewSheet) },
-                    testTag = "quick_action_weekly_review"
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 18.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Today's plan",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ClayPrimaryText
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "See all (${tasks.count { !it.isCompleted }})",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = ClayDeepPurple,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { showSeeAllTasksSheet = true }
+                                    .padding(4.dp)
+                            )
+                            IconButton(
+                                onClick = { showAddTaskDialog = true },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add task",
+                                    tint = ClayDeepPurple,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (displayTasks.isEmpty()) {
+                        Text(
+                            text = "All clear! You're completely up to date.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ClaySecondaryText,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            displayTasks.forEach { taskItem ->
+                                Surface(
+                                    onClick = { onToggleTask(taskItem) },
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (taskItem.isCompleted) ClaySoftMint.copy(alpha = 0.5f) else ClayPaleLavenderSurface.copy(alpha = 0.4f),
+                                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("plan_task_row_${taskItem.id}")
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.weight(1f),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            // Tactile Completion Checkbox
+                                            Icon(
+                                                imageVector = if (taskItem.isCompleted) Icons.Default.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                                                contentDescription = if (taskItem.isCompleted) "Completed" else "Incomplete",
+                                                tint = if (taskItem.isCompleted) GentleSuccessGreen else ClaySecondaryText,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Column {
+                                                Text(
+                                                    text = taskItem.title,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = ClayPrimaryText,
+                                                    textDecoration = if (taskItem.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                if (taskItem.domain.isNotBlank()) {
+                                                    Text(
+                                                        text = taskItem.domain,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = ClaySecondaryText
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Duration label
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = Color.White,
+                                            border = BorderStroke(1.dp, Color(0xFFF0EBE1))
+                                        ) {
+                                            Text(
+                                                text = "${taskItem.durationMinutes}m",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ClayDeepPurple,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        // -------------------------------------------------------------
+        // 5. UPCOMING EVENT (Small, elegant, shown only when exists)
+        // -------------------------------------------------------------
+        if (upcomingEvent != null) {
+            item {
+                ClayCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    containerColor = ClaySkyBlue.copy(alpha = 0.5f),
+                    borderColor = ClaySkyBlue,
+                    elevation = 2.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        ClayIconBadge(
+                            icon = Icons.Default.Event,
+                            containerColor = Color.White,
+                            iconColor = Color(0xFF4A749E),
+                            size = 38.dp,
+                            iconSize = 20.dp
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "UPCOMING",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4A749E)
+                            )
+                            Text(
+                                text = upcomingEvent.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            if (upcomingEvent.dateString.isNotBlank()) {
+                                Text(
+                                    text = upcomingEvent.dateString,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ClaySecondaryText
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // Add Task Dialog
-    if (showAddTaskDialog) {
-        var titleInput by rememberSaveable { mutableStateOf("") }
-        var subtitleInput by rememberSaveable { mutableStateOf("") }
-        var domainInput by rememberSaveable { mutableStateOf("ACADEMIC") }
-        var priorityInput by rememberSaveable { mutableStateOf("MUST DO") }
-        var durationInput by rememberSaveable { mutableIntStateOf(30) }
-        var slotInput by rememberSaveable { mutableStateOf("4:30 PM") }
+    // -----------------------------------------------------------------
+    // MODAL BOTTOM SHEET: SECONDARY TASK ACTIONS (Clean progressive disclosure)
+    // -----------------------------------------------------------------
+    if (showSecondaryActionSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSecondaryActionSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = "Adjust Next Step",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = ClayPrimaryText
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Adapt your plan based on real-time focus or constraints.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ClaySecondaryText
+                )
+                Spacer(modifier = Modifier.height(18.dp))
 
-        AlertDialog(
-            onDismissRequest = { showAddTaskDialog = false },
-            title = { Text("Add Task to ASTHA OS") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = titleInput,
-                        onValueChange = { titleInput = it },
-                        label = { Text("Task title (e.g., Physics DPP #4)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                // Option 1: I have less time
+                Surface(
+                    onClick = {
+                        showSecondaryActionSheet = false
+                        showLessTimeDialog = true
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    color = ClayPaleLavenderSurface.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        ClayIconBadge(
+                            icon = Icons.Default.Schedule,
+                            containerColor = Color.White,
+                            iconColor = ClayDeepPurple
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "I have less time",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Text(
+                                text = "Scale task to 10 or 15 minutes",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ClaySecondaryText
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = ClaySecondaryText)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Option 2: I'm distracted / need recovery
+                Surface(
+                    onClick = {
+                        showSecondaryActionSheet = false
+                        onOpenSubScreen(ActiveSubScreen.DistractionRecoverySheet)
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    color = ClayPeach.copy(alpha = 0.4f),
+                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        ClayIconBadge(
+                            icon = Icons.Default.SwapHoriz,
+                            containerColor = Color.White,
+                            iconColor = Color(0xFFC7696E)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "I'm distracted / Reset",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Text(
+                                text = "Take a 2-min breather and reschedule guilt-free",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ClaySecondaryText
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = ClaySecondaryText)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Option 3: Switch to another task
+                Surface(
+                    onClick = {
+                        showSecondaryActionSheet = false
+                        showSeeAllTasksSheet = true
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    color = ClaySoftMint.copy(alpha = 0.4f),
+                    border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        ClayIconBadge(
+                            icon = Icons.Default.PlayArrow,
+                            containerColor = Color.White,
+                            iconColor = GentleSuccessGreen
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Choose a different task",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ClayPrimaryText
+                            )
+                            Text(
+                                text = "Browse and select from your full plan",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ClaySecondaryText
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = ClaySecondaryText)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // MODAL BOTTOM SHEET: "SEE ALL TASKS"
+    // -----------------------------------------------------------------
+    if (showSeeAllTasksSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSeeAllTasksSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Today's Task Plan",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = ClayPrimaryText
                     )
-                    OutlinedTextField(
-                        value = subtitleInput,
-                        onValueChange = { subtitleInput = it },
-                        label = { Text("Concrete next step (How to do it)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("ACADEMIC", "PROJECT", "WELLNESS").forEach { dom ->
-                            OutlinedButton(
-                                onClick = { domainInput = dom },
-                                border = BorderStroke(
-                                    if (domainInput == dom) 2.dp else 1.dp,
-                                    if (domainInput == dom) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                )
+                    IconButton(onClick = { showSeeAllTasksSheet = false }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(tasks) { taskItem ->
+                        Surface(
+                            onClick = { onToggleTask(taskItem) },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (taskItem.isCompleted) ClaySoftMint.copy(alpha = 0.4f) else ClayPaleLavenderSurface.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, Color(0xFFF0EBE1)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(dom.take(4), style = MaterialTheme.typography.labelSmall)
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (taskItem.isCompleted) Icons.Default.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                                        contentDescription = null,
+                                        tint = if (taskItem.isCompleted) GentleSuccessGreen else ClaySecondaryText,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            text = taskItem.title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = ClayPrimaryText,
+                                            textDecoration = if (taskItem.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                        )
+                                        if (taskItem.subtitle.isNotBlank()) {
+                                            Text(
+                                                text = taskItem.subtitle,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ClaySecondaryText,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                                ClayButton(
+                                    text = "Focus",
+                                    onClick = {
+                                        showSeeAllTasksSheet = false
+                                        onStartTaskFocus(taskItem)
+                                    },
+                                    containerColor = ClayDeepPurple,
+                                    contentColor = Color.White,
+                                    modifier = Modifier.height(38.dp)
+                                )
                             }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(15, 30, 45, 60).forEach { mins ->
-                            OutlinedButton(
-                                onClick = { durationInput = mins },
-                                border = BorderStroke(
-                                    if (durationInput == mins) 2.dp else 1.dp,
-                                    if (durationInput == mins) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                )
-                            ) {
-                                Text("${mins}m", style = MaterialTheme.typography.labelSmall)
-                            }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // DIALOG: I HAVE LESS TIME
+    // -----------------------------------------------------------------
+    if (showLessTimeDialog) {
+        AlertDialog(
+            onDismissRequest = { showLessTimeDialog = false },
+            title = {
+                Text(
+                    text = "Scale Down Session",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Choose a micro-focus sprint. Doing one small thing keeps your momentum alive without overwhelm.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ClaySecondaryText
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(10, 15, 20).forEach { mins ->
+                            ClayPill(
+                                label = "${mins}m sprint",
+                                isSelected = selectedLessMinutes == mins,
+                                onClick = { selectedLessMinutes = mins },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(
+                ClayButton(
+                    text = "Start ${selectedLessMinutes}m Sprint",
                     onClick = {
-                        if (titleInput.isNotBlank()) {
+                        showLessTimeDialog = false
+                        nowRecommendation.taskToStart?.let {
+                            onStartTaskFocus(it.copy(durationMinutes = selectedLessMinutes))
+                        } ?: onStartNowRecommendation(nowRecommendation.copy(durationMinutes = selectedLessMinutes))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showLessTimeDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color.White
+        )
+    }
+
+    // -----------------------------------------------------------------
+    // DIALOG: ADD QUICK TASK
+    // -----------------------------------------------------------------
+    if (showAddTaskDialog) {
+        var taskTitleInput by rememberSaveable { mutableStateOf("") }
+        var taskSubtitleInput by rememberSaveable { mutableStateOf("") }
+        var taskMinutesInput by rememberSaveable { mutableIntStateOf(20) }
+
+        AlertDialog(
+            onDismissRequest = { showAddTaskDialog = false },
+            title = {
+                Text(
+                    text = "Add Task to Today",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = taskTitleInput,
+                        onValueChange = { taskTitleInput = it },
+                        label = { Text("Task Title") },
+                        placeholder = { Text("e.g. Physics: Derivation 3") },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = taskSubtitleInput,
+                        onValueChange = { taskSubtitleInput = it },
+                        label = { Text("Single concrete action") },
+                        placeholder = { Text("e.g. Solve questions 4 & 5") },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(15, 20, 30, 45).forEach { mins ->
+                            ClayPill(
+                                label = "${mins}m",
+                                isSelected = taskMinutesInput == mins,
+                                onClick = { taskMinutesInput = mins },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                ClayButton(
+                    text = "Add to Plan",
+                    onClick = {
+                        if (taskTitleInput.isNotBlank()) {
                             onAddTask(
-                                titleInput,
-                                subtitleInput,
-                                "Added for today's $domainInput focus.",
-                                domainInput,
-                                priorityInput,
-                                durationInput,
-                                preferences.currentEnergyLevel,
-                                slotInput,
-                                false,
-                                0
+                                taskTitleInput.trim(),
+                                taskSubtitleInput.trim(),
+                                "Personal growth & academic step",
+                                "TODAY",
+                                "HIGH",
+                                taskMinutesInput,
+                                "NORMAL",
+                                "EVENING",
+                                true,
+                                1
                             )
                             showAddTaskDialog = false
                         }
-                    }
-                ) {
-                    Text("Save Task")
-                }
+                    },
+                    enabled = taskTitleInput.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             dismissButton = {
                 TextButton(onClick = { showAddTaskDialog = false }) {
                     Text("Cancel")
                 }
-            }
-        )
-    }
-
-    // Reschedule Task Dialog
-    if (taskToReschedule != null) {
-        val target = tasks.find { it.id == taskToReschedule }
-        if (target != null) {
-            var newTime by rememberSaveable { mutableStateOf(target.scheduledTimeSlot) }
-            var newBucket by rememberSaveable { mutableStateOf(target.priorityBucket) }
-            AlertDialog(
-                onDismissRequest = { taskToReschedule = null },
-                title = { Text("Reschedule or Reprioritize") },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(target.title, style = MaterialTheme.typography.titleSmall)
-                        OutlinedTextField(
-                            value = newTime,
-                            onValueChange = { newTime = it },
-                            label = { Text("New time slot (e.g., 5:00 PM or Tomorrow)") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text("Recovery Category:", style = MaterialTheme.typography.labelMedium)
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf("MUST DO", "SHOULD DO", "CAN POSTPONE", "CAN DELETE").forEach { b ->
-                                OutlinedButton(
-                                    onClick = { newBucket = b },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    border = BorderStroke(
-                                        if (newBucket == b) 2.dp else 1.dp,
-                                        if (newBucket == b) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                    )
-                                ) {
-                                    Text(b)
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onRescheduleTask(target, newTime, newBucket)
-                            taskToReschedule = null
-                        }
-                    ) {
-                        Text("Update")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { taskToReschedule = null }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-    }
-
-    // "I HAVE X MINUTES" Modal
-    if (showIHaveXMinutesDialog) {
-        var selectedMins by rememberSaveable { mutableIntStateOf(15) }
-        val calculatedMission = onCalculateMinutesMission(selectedMins)
-
-        AlertDialog(
-            onDismissRequest = { showIHaveXMinutesDialog = false },
-            title = { Text("I Have X Minutes") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        "Pick your available time window. ASTHA AI calculates the highest-value action that fits:",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf(5, 10, 15, 20, 30, 45, 60, 90).forEach { m ->
-                            val isSel = selectedMins == m
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { selectedMins = m }
-                            ) {
-                                Text(
-                                    text = if (m == 90) "90+m" else "${m}m",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = calculatedMission,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(14.dp)
-                        )
-                    }
-                }
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showIHaveXMinutesDialog = false
-                        onOpenSubScreen(
-                            ActiveSubScreen.FocusMode(
-                                taskTitle = "$selectedMins-Minute Targeted Mission",
-                                purpose = calculatedMission,
-                                durationMinutes = selectedMins,
-                                currentStepText = "Execute your $selectedMins-minute high-value block"
-                            )
-                        )
-                    }
-                ) {
-                    Text("Start $selectedMins-Min Block")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showIHaveXMinutesDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-
-    // "I'M CONFUSED" Modal
-    if (showImConfusedDialog) {
-        val confusionOptions = listOf(
-            "I don't know what to study",
-            "I don't know how to study",
-            "I have too many tasks",
-            "I'm too tired",
-            "I'm distracted",
-            "I don't understand the topic",
-            "I don't know where to start"
-        )
-        var chosenOption by rememberSaveable { mutableStateOf(confusionOptions.first()) }
-        val (resolutionText, targetSubScreen) = onResolveConfusion(chosenOption)
-
-        AlertDialog(
-            onDismissRequest = { showImConfusedDialog = false },
-            title = { Text("🧭 I'm Confused — Let's Simplify") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "What feels overwhelming right now? ASTHA AI converts confusion into ONE concrete next action:",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    confusionOptions.forEach { opt ->
-                        val isSel = chosenOption == opt
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { chosenOption = opt }
-                        ) {
-                            Text(
-                                text = opt,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (isSel) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
-                            )
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = resolutionText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(14.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showImConfusedDialog = false
-                        if (targetSubScreen != null) {
-                            onOpenSubScreen(targetSubScreen)
-                        }
-                    }
-                ) {
-                    Text("Do This One Thing")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImConfusedDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-
-    // Non-Judgemental Distraction Recovery Dialog
-    if (showImDistractedDialog) {
-        var parkedThought by rememberSaveable { mutableStateOf("") }
-        var thoughtSavedFeedback by rememberSaveable { mutableStateOf("") }
-
-        AlertDialog(
-            onDismissRequest = { showImDistractedDialog = false },
-            title = {
-                Text(
-                    text = "🌿 Gentle Focus Reset",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "It is completely normal for focus to wander or to feel tired. No guilt, no penalty, and no streak lost.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "Park a Distracting Thought:",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            OutlinedTextField(
-                                value = parkedThought,
-                                onValueChange = { parkedThought = it },
-                                placeholder = { Text("Jot down what's on your mind...", style = MaterialTheme.typography.bodySmall) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            if (parkedThought.isNotBlank()) {
-                                FilledTonalButton(
-                                    onClick = {
-                                        onAddTask(
-                                            parkedThought.trim(),
-                                            "Parked thought from focus session",
-                                            "Saved in backlog to review later without interrupting study.",
-                                            "PERSONAL",
-                                            "CAN POSTPONE",
-                                            15,
-                                            preferences.currentEnergyLevel,
-                                            "Evening",
-                                            false,
-                                            0
-                                        )
-                                        thoughtSavedFeedback = "Saved safely in your backlog! ✨"
-                                        parkedThought = ""
-                                    },
-                                    modifier = Modifier.align(Alignment.End)
-                                ) {
-                                    Text("Park It")
-                                }
-                            }
-                            if (thoughtSavedFeedback.isNotBlank()) {
-                                Text(
-                                    text = thoughtSavedFeedback,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = GentleSuccessGreen,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "Choose your gentle next step:",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    OutlinedButton(
-                        onClick = {
-                            showImDistractedDialog = false
-                            onStartNowRecommendation(nowRecommendation)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("1. Take 3 deep breaths & resume calmly")
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            showImDistractedDialog = false
-                            val targetTask = tasks.firstOrNull { !it.isCompleted } ?: OsTaskEntity(
-                                title = "10-Minute Focus Reset",
-                                subtitle = "Review 1 key formula or solve 1 problem",
-                                whyItMatters = "Light restart without pressure.",
-                                domain = "ACADEMIC",
-                                durationMinutes = 10
-                            )
-                            onStartTaskFocus(targetTask.copy(durationMinutes = 10))
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("2. Start a 10-minute micro version")
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            showImDistractedDialog = false
-                            onOpenSubScreen(ActiveSubScreen.AfterSchoolResetSheet)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("3. After-school reset / short walk")
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            showImDistractedDialog = false
-                            onOpenSubScreen(ActiveSubScreen.MorningModeSheet)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("4. Re-calculate study plan with ASTHA OS")
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showImDistractedDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun TopThreeTaskCard(
-    indexNumber: String,
-    task: OsTaskEntity,
-    onStart: () -> Unit,
-    onToggleComplete: () -> Unit,
-    onPostpone: () -> Unit,
-    onReschedule: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (task.isCompleted) {
-                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("top_task_card_${task.id}")
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (task.isCompleted) GentleSuccessGreen else MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = indexNumber,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = if (task.isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                    )
-                    Text(
-                        text = "${task.domain}  •  ${task.durationMinutes} min  •  ${task.scheduledTimeSlot}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                IconButton(onClick = onToggleComplete) {
-                    Icon(
-                        imageVector = if (task.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                        contentDescription = "Complete ${task.title}",
-                        tint = if (task.isCompleted) GentleSuccessGreen else MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = task.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            if (!task.isCompleted) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = onStart,
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Focus", style = MaterialTheme.typography.labelMedium)
-                    }
-                    OutlinedButton(
-                        onClick = onPostpone,
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Text("Postpone", style = MaterialTheme.typography.labelSmall)
-                    }
-                    OutlinedButton(
-                        onClick = onReschedule,
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Icon(Icons.Filled.Schedule, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Reschedule", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionPill(
-    label: String,
-    onClick: () -> Unit,
-    testTag: String
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        tonalElevation = 1.dp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .minimumInteractiveComponentSize()
-            .testTag(testTag)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color.White
         )
     }
 }

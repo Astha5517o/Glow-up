@@ -498,6 +498,10 @@ class GlowUpRepository(val dao: GlowUpDao) {
         )
     }
 
+    suspend fun updateStudyChapter(chapter: StudyChapterEntity) {
+        dao.updateStudyChapter(chapter)
+    }
+
     suspend fun recordQuestionOutcome(
         subject: String,
         outcome: String, // SOLVED, PARTIAL, WRONG, SKIPPED
